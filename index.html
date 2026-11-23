@@ -393,7 +393,11 @@ async function gToken() {
 }
 async function gapi(url, opt = {}) {
   const r = await fetch(url, Object.assign({}, opt, { headers: Object.assign({ Authorization: 'Bearer ' + G.tok }, opt.headers || {}) }));
-  if (!r.ok) { if (r.status === 401 || r.status === 403) { G.tok = null; G.exp = 0; } throw new Error('구글 응답 오류 ' + r.status + (r.status === 401 ? ' (로그인이 만료됨 — 다시 눌러 주세요)' : '')); }
+  if (!r.ok) {
+    let why = ''; try { const j = await r.json(); why = (j.error && (j.error.message || j.error.status)) || ''; } catch (e) { }
+    if (r.status === 401 || r.status === 403) { G.tok = null; G.exp = 0; DB.gLinked = false; }
+    throw new Error('구글 응답 오류 ' + r.status + (why ? ' — ' + why : '') + (r.status === 401 || r.status === 403 ? ' (다시 눌러 로그인하고 Drive 체크박스를 선택하세요)' : ''));
+  }
   return r;
 }
 /* 병합: 프로젝트별로 수정시각이 더 최근인 쪽을 채택, 삭제 기록 반영 */
