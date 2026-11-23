@@ -84,7 +84,7 @@ function toast(t) { const e = $('#toast'); e.textContent = t; e.classList.add('o
 
 /* ================= 데이터/저장 ================= */
 const KEY = 'webnovel_notes_v1';
-let DB = { projects: [], email: '', fs: 16, customKw: [], deleted: {}, gcid: '', gEmail: '', gLinked: false, gLast: 0, gFileId: '' };
+let DB = { projects: [], email: '', fs: 16, customKw: [], deleted: {}, trash: [], gcid: '', gEmail: '', gLinked: false, gLast: 0, gFileId: '' };
 const KW = [['장르·시대',['#현대물','#시대물','#서양풍','#동양풍','#로판','#판타지','#학원물','#사극','#무협','#SF','#헌터물','#아포칼립스']],['캐릭터·관계',['#미남수','#미남공','#미인수','#미인공','#능력수','#능력공','#절륜수','#절륜공','#아방수','#아방공','#첫사랑','#매력녀','#능력녀','#미녀','#미남','#다정남','#집착남','#냉미남','#까칠수','#순정공','#후회공','#짝사랑','#소꿉친구','#삼각관계','#재회물']],['소재·설정',['#회귀','#빙의','#환생','#복수','#성장물','#계약연애','#계약결혼','#궁정물','#재벌','#연예계','#오메가버스','#먼치킨']],['분위기',['#달달물','#힐링물','#개그','#시리어스','#피폐물','#사이다','#로맨스','#느와르']]];
 let dirty = false, lastSaved = null, storageOK = true;
 function load() {
@@ -101,7 +101,7 @@ function paintStatus() {
   e.className = 'st' + (dirty ? ' dirty' : '');
   e.innerHTML = (dirty ? '저장 대기' : '저장됨') + '<br>' + (lastSaved ? hm(lastSaved) : (storageOK ? '' : '저장소 불가'));
 }
-setInterval(() => { if (dirty) save(); if (DB.gLinked && G.tok && Date.now() < G.exp - 60000) syncNow(false); }, 5 * 60 * 1000);          // 5분마다 자동 저장
+setInterval(async () => { if (dirty) save(); try { await autoSnapTick(); } catch (e) { } if (DB.gLinked && G.tok && Date.now() < G.exp - 60000) syncNow(false); }, 5 * 60 * 1000);          // 5분마다 자동 저장
 document.addEventListener('visibilitychange', () => { if (document.hidden && dirty) save(); });
 window.addEventListener('pagehide', () => { if (dirty) save(); });
 
@@ -197,7 +197,8 @@ function render() {
       <div class="row"><button style="flex:1" data-act="addEp">+ 화 추가</button><button style="flex:1" data-act="addSide">+ 외전 추가</button></div>`;
     a.innerHTML = hdr(p.title, true) + `<div class="wrap"><div class="tabs"><button class="${V.tab==='syn'?'on':''}" data-act="tab" data-t="syn">시놉시스</button><button class="${V.tab==='body'?'on':''}" data-act="tab" data-t="body">본문</button></div>${list}
       <div class="card mut" style="margin-top:10px">시놉시스 ${t.syn.w.toLocaleString()}자 · 본문 ${t.body.w.toLocaleString()}자 · 전체 ${t.all.w.toLocaleString()}자 <span>(공백포함)</span></div>
-      <div class="row" style="margin-top:8px"><button style="flex:1" data-act="counts">글자수 보기</button><button class="pri" style="flex:1" data-act="export">내보내기</button></div></div>`;
+      <div class="row" style="margin-top:8px"><button style="flex:1" data-act="counts">글자수 보기</button><button class="pri" style="flex:1" data-act="export">내보내기</button></div>
+      <div class="row" style="margin-top:8px"><button style="flex:1" data-act="verSave">버전 저장</button><button style="flex:1" data-act="verList">버전 · 되돌리기</button></div></div>`;
   } else if (V.s === 'edit') {
     a.innerHTML = hdr(keyName(p, V.key), true) + `<div class="wrap">${editor(p, V.key)}</div>` +
       `<div class="bar"><div class="cnt" id="cc"></div><button class="sm" data-act="spell">맞춤법</button><button class="sm" data-act="fsm">가−</button><button class="sm" data-act="fsp">가+</button></div>`;
@@ -272,34 +273,45 @@ document.addEventListener('click', async e => {
     case 'ctab': V.ctab = d.t; render(); break;
     case 'addEp': p.body.eps.push({ t: '', x: '' }); R(); break;
     case 'addSide': p.body.side.push({ t: '', x: '' }); R(); break;
-    case 'delBody': if (await confirmBox('이 원고를 삭제할까요? 되돌릴 수 없습니다.')) { p.body[d.arr].splice(+d.i, 1); if (d.arr === 'eps' && !p.body.eps.length) p.body.eps.push({ t: '', x: '' }); V.s = 'project'; V.tab = 'body'; R(); } break;
+    case 'delBody': if (await confirmBox('이 원고를 삭제할까요?\n설정 → 휴지통에 30일간 보관됩니다.')) { const it = p.body[d.arr][+d.i]; toTrash(d.arr === 'eps' ? 'ep' : 'side', (d.arr === 'eps' ? (+d.i + 1) + '화' : '외전' + (+d.i + 1) + '화') + (it.t ? ' ' + it.t : ''), it, p, +d.i); p.body[d.arr].splice(+d.i, 1); if (d.arr === 'eps' && !p.body.eps.length) p.body.eps.push({ t: '', x: '' }); V.s = 'project'; V.tab = 'body'; R(); } break;
     case 'addScene': s.treat.push(''); R(); break;
-    case 'delScene': s.treat.splice(+d.i, 1); R(); break;
+    case 'delScene': toTrash('scene', 'S#' + (+d.i + 1), s.treat[+d.i], p, +d.i); s.treat.splice(+d.i, 1); R(); break;
     case 'addLead': s.lead.push({}); s.support.push(newSub()); R(); break;
-    case 'delLead': if (await confirmBox('주연 ' + (+d.i + 1) + '과 그 조연 목록을 삭제할까요?')) { s.lead.splice(+d.i, 1); s.support.splice(+d.i, 1); R(); } break;
+    case 'delLead': if (await confirmBox('주연 ' + (+d.i + 1) + '과 그 조연 목록을 삭제할까요?')) { await snapGuard(p, '주연 삭제 전'); s.lead.splice(+d.i, 1); s.support.splice(+d.i, 1); R(); } break;
     case 'kwToggle': { kwBox(s); const x = s.kw.indexOf(d.k); x < 0 ? s.kw.push(d.k) : s.kw.splice(x, 1); R(); break; }
     case 'addKw': { kwBox(s); let k = $('#kwin').value.trim().replace(/\s+/g, ''); if (!k) break; if (k[0] !== '#') k = '#' + k; if (!s.kw.includes(k)) s.kw.push(k); DB.customKw = DB.customKw || []; if (!KW.some(g => g[1].includes(k)) && !DB.customKw.includes(k)) DB.customKw.push(k); R(); break; }
     case 'addField': { const n = await ask('새 입력 항목 이름', '예: 말버릇, 특기, 직업'); if (n) { s.leadFields.push({ id: 'f' + Date.now().toString(36), label: n }); R(); } break; }
-    case 'delField': if (await confirmBox('이 항목과 입력된 내용을 모든 주연에서 지울까요?')) { s.leadFields = s.leadFields.filter(f => f.id !== d.id); s.lead.forEach(L => delete L[d.id]); R(); } break;
+    case 'delField': if (await confirmBox('이 항목과 입력된 내용을 모든 주연에서 지울까요?')) { await snapGuard(p, '항목 삭제 전'); s.leadFields = s.leadFields.filter(f => f.id !== d.id); s.lead.forEach(L => delete L[d.id]); R(); } break;
     case 'addSub': { const n = await ask('하위 그룹 이름', '예: 학교, 적대 세력'); if (n) { s.support[+d.i].push({ name: n, people: [] }); R(); } break; }
-    case 'delSub': if (await confirmBox('이 그룹과 인물을 삭제할까요?')) { s.support[+d.i].splice(+d.j, 1); R(); } break;
+    case 'delSub': if (await confirmBox('이 그룹과 인물을 삭제할까요?')) { await snapGuard(p, '그룹 삭제 전'); s.support[+d.i].splice(+d.j, 1); R(); } break;
     case 'addPerson': s.support[+d.i][+d.j].people.push({ name: '', rel: '', memo: '' }); R(); break;
-    case 'delPerson': s.support[+d.i][+d.j].people.splice(+d.n, 1); R(); break;
+    case 'delPerson': await snapGuard(p, '인물 삭제 전'); s.support[+d.i][+d.j].people.splice(+d.n, 1); R(); break;
     case 'addOther': s.others.push({ name: '', rel: '', memo: '' }); R(); break;
-    case 'delOther': s.others.splice(+d.n, 1); R(); break;
+    case 'delOther': await snapGuard(p, '인물 삭제 전'); s.others.splice(+d.n, 1); R(); break;
     case 'fsm': DB.fs = Math.max(12, DB.fs - 1); touch(); render(); break;
     case 'fsp': DB.fs = Math.min(26, DB.fs + 1); touch(); render(); break;
     case 'counts': showCounts(); break;
     case 'export': exportDlg(); break;
     case 'spell': spellDlg(); break;
     case 'close': closeModal(); break;
+    case 'svLoad': svLoad(); break;
     case 'doExport': doExport(); break;
-    case 'delProject': { const pr = DB.projects.find(x => x.id === d.id); if (await confirmBox('「' + pr.title + '」 프로젝트 전체를 삭제할까요?\n되돌릴 수 없습니다.')) { DB.projects = DB.projects.filter(x => x !== pr); DB.deleted = DB.deleted || {}; DB.deleted[pr.id] = Date.now(); V = { s: 'home' }; touch(); save(); render(); } break; }
+    case 'delProject': { const pr = DB.projects.find(x => x.id === d.id); if (await confirmBox('「' + pr.title + '」 프로젝트 전체를 삭제할까요?\n휴지통에 30일간 보관됩니다.')) { await snapSave(pr, '자동 · 프로젝트 삭제 전', 'auto'); DB.trash.unshift({ id: uid(), type: 'project', label: pr.title, data: pr, at: Date.now() }); DB.projects = DB.projects.filter(x => x !== pr); DB.deleted = DB.deleted || {}; DB.deleted[pr.id] = Date.now(); V = { s: 'home' }; touch(); save(); render(); } break; }
     case 'backup': backup(); break;
     case 'restore': $('#rf').click(); break;
     case 'gsync': syncNow(true); break;
     case 'gout': if (await confirmBox('연결을 해제할까요? 이 기기의 글은 그대로 남습니다.', '해제')) { DB.gLinked = false; DB.gFileId = ''; DB.gEmail = ''; G.tok = null; save(); settings(); } break;
     case 'addproj': $('#pf').click(); break;
+    case 'verSave': { const n = (await snapList(p.id)).filter(x => x.kind === 'manual').length + 1; const nm = await ask('버전 저장', '버전 이름', 'ver' + n); if (nm) { const r = await snapSave(p, nm, 'manual'); if (r) toast('「' + nm + '」 버전을 저장했습니다'); } break; }
+    case 'verList': verList(); break;
+    case 'verRestore': verRestore(d.id); break;
+    case 'verCompare': verCompare(d.id); break;
+    case 'verItem': verItem(d.k); break;
+    case 'verDel': if (await confirmBox('이 버전을 삭제할까요?')) { await tx('readwrite', x => x.delete(d.id)); verList(); } break;
+    case 'trashOpen': trashOpen(); break;
+    case 'tRestore': tRestore(d.id); break;
+    case 'tPurge': if (await confirmBox('영구 삭제할까요? 되돌릴 수 없습니다.')) { DB.trash = DB.trash.filter(x => x.id !== d.id); touch(); trashOpen(); } break;
+    case 'svRestore': svRestore(d.id); break;
     case 'saveEmail': DB.email = $('#em').value.trim(); touch(); save(); toast('이메일을 등록했습니다'); break;
     case 'fix': applyFix(+d.n); break;
     case 'naver': copyAndOpen('https://search.naver.com/search.naver?query=' + encodeURIComponent('맞춤법 검사기')); break;
@@ -365,11 +377,11 @@ function settings() {
       <button class="pri" style="width:100%;margin-top:8px" data-act="gsync">구글 계정 연결 · 동기화</button>`}
     <p class="mut" id="gmsg"></p>
     <div class="row" style="margin-top:8px"><button style="flex:1" data-act="backup">백업 파일 보내기</button><button style="flex:1" data-act="restore">백업 불러오기</button></div>
-    <div class="row" style="margin-top:8px"><button style="flex:1" data-act="addproj">프로젝트 파일 추가(가져오기)</button></div>
+    <div class="row" style="margin-top:8px"><button style="flex:1" data-act="addproj">프로젝트 파일 추가(가져오기)</button><button style="flex:1" data-act="trashOpen">휴지통 (${(DB.trash || []).length})</button></div>
     <input type="file" id="rf" accept=".json,application/json" hidden><input type="file" id="pf" accept=".json,application/json" hidden>
     ${p ? `<button class="danger" style="width:100%;margin-top:14px" data-act="delProject" data-id="${p.id}">현재 프로젝트 삭제</button>` : ''}
     <button style="width:100%;margin-top:8px" data-act="close">닫기</button>`);
-  $('#rf').onchange = async e => { const f = e.target.files[0]; if (!f) return; try { const j = JSON.parse(await f.text()); if (!Array.isArray(j.projects)) throw 0; if (await confirmBox('현재 데이터를 백업 파일로 바꿉니다. 계속할까요?', '불러오기')) { const keep = { gcid: DB.gcid, gEmail: DB.gEmail, gLinked: DB.gLinked, gFileId: DB.gFileId, gLast: DB.gLast }; DB = Object.assign({ email: '', fs: 16, customKw: [], deleted: {} }, j, keep); V = { s: 'home' }; touch(); save(); render(); toast('불러왔습니다'); } } catch (x) { toast('올바른 백업 파일이 아닙니다'); } };
+  $('#rf').onchange = async e => { const f = e.target.files[0]; if (!f) return; try { const j = JSON.parse(await f.text()); if (!Array.isArray(j.projects)) throw 0; if (await confirmBox('현재 데이터를 백업 파일로 바꿉니다. 계속할까요?\n(현재 프로젝트는 자동으로 버전 저장됩니다)', '불러오기')) { for (const x of DB.projects) await snapSave(x, '자동 · 백업 불러오기 전', 'auto'); const keep = { gcid: DB.gcid, gEmail: DB.gEmail, gLinked: DB.gLinked, gFileId: DB.gFileId, gLast: DB.gLast }; DB = Object.assign({ email: '', fs: 16, customKw: [], deleted: {} }, j, keep); V = { s: 'home' }; touch(); save(); render(); toast('불러왔습니다'); } } catch (x) { toast('올바른 백업 파일이 아닙니다'); } };
   $('#pf').onchange = async e => { const f = e.target.files[0]; if (!f) return; try { const j = JSON.parse(await f.text()); if (!Array.isArray(j.projects)) throw 0; let n = 0; j.projects.forEach(p => { if (p && p.id && p.syn && p.body && !DB.projects.some(x => x.id === p.id)) { DB.projects.unshift(p); n++; } }); (j.customKw || []).forEach(k => { DB.customKw = DB.customKw || []; if (!DB.customKw.includes(k)) DB.customKw.push(k); }); touch(); save(); render(); closeModal(); toast(n ? n + '개 프로젝트를 추가했습니다 (기존 글은 그대로)' : '이미 들어 있는 프로젝트입니다'); } catch (x) { toast('올바른 프로젝트 파일이 아닙니다'); } };
 }
 /* ---------- 구글 드라이브 동기화 ---------- */
@@ -424,6 +436,7 @@ async function syncNow(interactive) {
     if (!id) { const q = encodeURIComponent("name='" + SYNC_NAME + "' and trashed=false"); const f = (await (await gapi('https://www.googleapis.com/drive/v3/files?q=' + q + '&fields=files(id)')).json()).files; if (f && f[0]) id = f[0].id; }
     if (id) { try { remote = await (await gapi('https://www.googleapis.com/drive/v3/files/' + id + '?alt=media')).json(); } catch (e) { if (String(e.message).includes('404')) { id = ''; } else throw e; } }
     const m = mergeData(DB, remote || {});
+    for (const x of DB.projects) { const q = m.projects.find(y => y.id === x.id); if (!q || JSON.stringify(q) !== JSON.stringify(x)) await snapSave(x, '자동 · 동기화 전', 'auto'); }
     DB.projects = m.projects; DB.deleted = m.deleted; DB.customKw = m.customKw;
     const body = JSON.stringify({ app: 'webnovel-notes', v: 1, savedAt: Date.now(), projects: m.projects, deleted: m.deleted, customKw: m.customKw });
     if (id) await gapi('https://www.googleapis.com/upload/drive/v3/files/' + id + '?uploadType=media', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body });
@@ -528,9 +541,111 @@ function doExport() {
   closeModal(); toast('내보내는 중…');
 }
 
+/* ================= 휴지통 · 버전(되돌리기) ================= */
+let _idb = null;
+function idb() {
+  if (_idb) return _idb;
+  _idb = new Promise((res, rej) => {
+    try { const r = indexedDB.open('webnovel_snaps', 1); r.onupgradeneeded = () => { const s = r.result.createObjectStore('snaps', { keyPath: 'id' }); s.createIndex('pid', 'pid'); }; r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); }
+    catch (e) { rej(e); }
+  });
+  return _idb;
+}
+async function tx(mode, fn) { const d = await idb(); return new Promise((res, rej) => { const t = d.transaction('snaps', mode); let out; const r = fn(t.objectStore('snaps')); if (r) r.onsuccess = () => { out = r.result; }; t.oncomplete = () => res(out); t.onerror = () => rej(t.error); t.onabort = () => rej(t.error); }); }
+async function pack(o) { const s = JSON.stringify(o); try { if (window.CompressionStream) return { gz: true, buf: await new Response(new Blob([s]).stream().pipeThrough(new CompressionStream('gzip'))).arrayBuffer() }; } catch (e) { } return { gz: false, buf: s }; }
+async function unpack(r) { if (r.gz) return JSON.parse(await new Response(new Blob([r.buf]).stream().pipeThrough(new DecompressionStream('gzip'))).text()); return JSON.parse(r.buf); }
+async function snapSave(p, name, kind) {
+  try {
+    const { gz, buf } = await pack(p);
+    const rec = { id: 's' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5), pid: p.id, title: p.title, name, kind, at: Date.now(), gz, buf, chars: totals(p).all.w };
+    await tx('readwrite', s => s.put(rec));
+    if (kind === 'auto') { const l = (await snapList(p.id)).filter(x => x.kind === 'auto').slice(30); for (const x of l) await tx('readwrite', s => s.delete(x.id)); }
+    return rec;
+  } catch (e) { toast('이 환경에서는 버전 저장을 쓸 수 없습니다'); return null; }
+}
+async function snapList(pid) { const a = await tx('readonly', s => s.index('pid').getAll(pid)); return (a || []).sort((x, y) => y.at - x.at); }
+async function snapAll() { const a = await tx('readonly', s => s.getAll()); return a || []; }
+const LASTSNAP = {};
+async function snapGuard(p, note) { const L = LASTSNAP[p.id] || (LASTSNAP[p.id] = { t: 0, sig: p.updated, g: 0 }); if (Date.now() - (L.g || 0) < 3 * 60 * 1000) return; L.g = Date.now(); await snapSave(p, '자동 · ' + note, 'auto'); }
+async function autoSnapTick() {
+  for (const p of DB.projects) { const L = LASTSNAP[p.id] || (LASTSNAP[p.id] = { t: 0, sig: 0, g: 0 }); if ((p.updated || 0) <= L.sig || Date.now() - L.t < 30 * 60 * 1000) continue; await snapSave(p, '자동 · 주기 저장', 'auto'); L.t = Date.now(); L.sig = p.updated; }
+}
+function toTrash(type, label, data, p, idx) { DB.trash = DB.trash || []; DB.trash.unshift({ id: uid(), type, label, data, pid: p.id, ptitle: p.title, idx, at: Date.now() }); touch(); }
+const fdt = t => new Date(t).toLocaleString('ko-KR', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+const TYPE_KO = { project: '프로젝트', ep: '화', side: '외전', scene: '트리트먼트 장면' };
+function trashOpen() {
+  const list = DB.trash || [];
+  const rows = list.length ? list.map(x => `<div class="sp-item"><b>${esc(x.label)}</b> <span class="mut">${TYPE_KO[x.type] || ''}${x.ptitle ? ' · ' + esc(x.ptitle) : ''} · ${fdt(x.at)}</span><div class="row" style="margin-top:6px"><button class="sm pri" data-act="tRestore" data-id="${x.id}">복원</button><button class="sm danger" data-act="tPurge" data-id="${x.id}">영구 삭제</button></div></div>`).join('') : '<p class="mut">비어 있습니다.</p>';
+  modal(`<h3>휴지통</h3><p class="mut">삭제한 프로젝트·화·외전·장면이 30일간 보관됩니다.</p>${rows}<div id="svbox"></div><button style="width:100%;margin-top:10px" data-act="svLoad">삭제·교체된 프로젝트의 저장 버전 보기</button><button style="width:100%;margin-top:8px" data-act="close">닫기</button>`);
+}
+async function svLoad() {
+  const have = new Set(DB.projects.map(p => p.id)), all = (await snapAll()).filter(x => !have.has(x.pid)).sort((a, b) => b.at - a.at);
+  $('#svbox').innerHTML = '<h4>없어진 프로젝트의 저장 버전</h4>' + (all.length ? all.map(x => `<div class="sp-item"><b>${esc(x.title)}</b> · ${esc(x.name)} <span class="mut">${fdt(x.at)} · ${x.chars.toLocaleString()}자</span><div style="margin-top:6px"><button class="sm pri" data-act="svRestore" data-id="${x.id}">새 프로젝트로 복원</button></div></div>`).join('') : '<p class="mut">없습니다.</p>');
+}
+async function svRestore(id) {
+  const rec = (await snapAll()).find(x => x.id === id); if (!rec) return; const pr = await unpack(rec);
+  if (DB.projects.some(x => x.id === pr.id)) pr.id = uid(); if (DB.deleted) delete DB.deleted[pr.id];
+  pr.updated = Date.now(); DB.projects.unshift(pr); touch(); save(); render(); closeModal(); toast('「' + pr.title + '」를 복원했습니다');
+}
+function tRestore(id) {
+  const x = (DB.trash || []).find(t => t.id === id); if (!x) return;
+  if (x.type === 'project') { const pr = x.data; if (DB.projects.some(q => q.id === pr.id)) pr.id = uid(); if (DB.deleted) delete DB.deleted[pr.id]; pr.updated = Date.now(); DB.projects.unshift(pr); }
+  else {
+    const p = DB.projects.find(q => q.id === x.pid); if (!p) { toast('원래 프로젝트가 없어 복원할 수 없습니다'); return; }
+    if (x.type === 'scene') p.syn.treat.splice(Math.min(x.idx, p.syn.treat.length), 0, x.data);
+    else { const a = x.type === 'ep' ? p.body.eps : p.body.side; a.splice(Math.min(x.idx, a.length), 0, x.data); }
+    p.updated = Date.now();
+  }
+  DB.trash = DB.trash.filter(t => t.id !== id); touch(); save(); render(); trashOpen(); toast('복원했습니다');
+}
+async function verList() {
+  const p = curP(); if (!p) return; const l = await snapList(p.id);
+  modal(`<h3>버전 · 되돌리기</h3><p class="mut">「${esc(p.title)}」 · 수동 저장(ver…)은 계속 보관, 자동 저장은 최근 30개만 보관합니다. 되돌리기 전에는 현재 상태가 자동 저장됩니다.</p>` +
+    (l.length ? l.map(x => `<div class="sp-item"><b>${esc(x.name)}</b> <span class="mut">${x.kind === 'manual' ? '수동' : '자동'} · ${fdt(x.at)} · ${x.chars.toLocaleString()}자</span><div class="row" style="margin-top:6px;flex-wrap:wrap"><button class="sm" data-act="verCompare" data-id="${x.id}">비교 · 일부 되돌리기</button><button class="sm pri" data-act="verRestore" data-id="${x.id}">전체 되돌리기</button><button class="sm ghost danger" data-act="verDel" data-id="${x.id}">삭제</button></div></div>`).join('') : '<p class="mut">저장된 버전이 없습니다. "버전 저장"을 눌러 보세요.</p>') +
+    `<button style="width:100%;margin-top:10px" data-act="close">닫기</button>`);
+}
+async function verRestore(id) {
+  const p = curP(), rec = (await snapList(p.id)).find(x => x.id === id); if (!rec) return;
+  if (!await confirmBox('「' + rec.name + '」(' + fdt(rec.at) + ') 상태로 프로젝트 전체를 되돌립니다.\n지금 상태는 자동으로 저장됩니다.', '되돌리기')) return;
+  await snapSave(p, '자동 · 되돌리기 전', 'auto'); const old = await unpack(rec), i = DB.projects.indexOf(p);
+  DB.projects[i] = Object.assign(old, { id: p.id, updated: Date.now() }); V.s = 'project'; touch(); save(); render(); closeModal(); toast('되돌렸습니다');
+}
+let CMP = null;
+const itemKeys = {
+  '로그라인': { g: s => s.syn.logline, set: (s, o) => { s.syn.logline = o.syn.logline; } },
+  '등장인물': { set: (s, o) => { ['leadFields', 'lead', 'support', 'others', 'kw'].forEach(k => { s.syn[k] = o.syn[k]; }); } },
+  '배경': { set: (s, o) => { ['era', 'place', 'fantasy'].forEach(k => { s.syn[k] = o.syn[k]; }); } },
+  '줄거리(기승전결)': { set: (s, o) => { s.syn.plot = o.syn.plot; } },
+  '트리트먼트': { set: (s, o) => { s.syn.treat = o.syn.treat; } },
+  '프롤로그': { set: (s, o) => { s.body.pro = o.body.pro; } },
+  '에필로그': { set: (s, o) => { s.body.epi = o.body.epi; } }
+};
+function setItem(cur, old, label) {
+  if (itemKeys[label]) return itemKeys[label].set(cur, old);
+  let m = label.match(/^(\d+)화$/), arr = 'eps'; if (!m) { m = label.match(/^외전(\d+)화$/); arr = 'side'; }
+  if (!m) return; const i = +m[1] - 1, src = old.body[arr][i];
+  if (src) { if (i < cur.body[arr].length) cur.body[arr][i] = JSON.parse(JSON.stringify(src)); else cur.body[arr].push(JSON.parse(JSON.stringify(src))); }
+}
+async function verCompare(id) {
+  const p = curP(), rec = (await snapList(p.id)).find(x => x.id === id); if (!rec) return;
+  CMP = { id, old: await unpack(rec), name: rec.name }; showCmp();
+}
+function showCmp() {
+  const p = curP(), a = new Map(rowsOf(p).map(r => [r.label, r.text])), b = new Map(rowsOf(CMP.old).map(r => [r.label, r.text]));
+  const labels = [...new Set([...b.keys(), ...a.keys()])].filter(l => !(l.match(/^(\d+)화$|^외전/) && !b.has(l) && false));
+  const diff = labels.filter(l => (a.get(l) || '') !== (b.get(l) || ''));
+  const rows = diff.map(l => { const ca = a.has(l) ? cnt(a.get(l)).w : null, cb = b.has(l) ? cnt(b.get(l)).w : null; const st = ca === null ? '현재에 없음' : cb === null ? '이 버전에 없음' : '다름'; return `<div class="sp-item"><b>${esc(l)}</b> <span class="mut">${st} · 현재 ${ca === null ? '-' : ca.toLocaleString()}자 → 이 버전 ${cb === null ? '-' : cb.toLocaleString()}자</span>${cb === null ? '' : `<div style="margin-top:6px"><button class="sm pri" data-act="verItem" data-k="${esc(l)}">이 항목만 이 버전으로 되돌리기</button></div>`}</div>`; }).join('');
+  modal(`<h3>「${esc(CMP.name)}」와 비교</h3><p class="mut">현재와 달라진 항목만 보여줍니다.</p>${diff.length ? rows : '<p>현재와 같은 내용입니다.</p>'}<button style="width:100%;margin-top:10px" data-act="verList">버전 목록으로</button><button style="width:100%;margin-top:8px" data-act="close">닫기</button>`);
+}
+async function verItem(label) {
+  const p = curP(); if (!CMP || !p) return;
+  if (!await confirmBox('「' + label + '」을(를) 「' + CMP.name + '」 버전의 내용으로 되돌립니다.\n지금 상태는 자동으로 저장됩니다.', '되돌리기')) { showCmp(); return; }
+  await snapSave(p, '자동 · 일부 되돌리기 전', 'auto'); setItem(p, CMP.old, label); touch(); save(); render(); showCmp(); toast('되돌렸습니다');
+}
+
 /* ================= 시작 ================= */
 const DEFAULT_CID = '177902208370-9c9ce0nabc46nlrd842dkp3sclg64fif.apps.googleusercontent.com';
-load(); if (!DB.gcid) DB.gcid = DEFAULT_CID; render();
+load(); if (!DB.gcid) DB.gcid = DEFAULT_CID; DB.trash = (DB.trash || []).filter(x => Date.now() - x.at < 30 * 864e5); DB.projects.forEach(p => { LASTSNAP[p.id] = { t: 0, sig: p.updated || 0, g: 0 }; }); render();
 try { if (navigator.storage && navigator.storage.persist) navigator.storage.persist(); } catch (e) { }
 if ('serviceWorker' in navigator && /^https?:$/.test(location.protocol)) navigator.serviceWorker.register('sw.js').catch(() => { });
 window.__app = { mergeData, DB: () => DB, paras, toTxt, toHwpx, newProject, rowsOf, totals, runSpell, cnt };
