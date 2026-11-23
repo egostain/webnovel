@@ -386,14 +386,14 @@ async function gToken() {
   await loadGIS();
   return new Promise((res, rej) => {
     const tc = google.accounts.oauth2.initTokenClient({ client_id: DB.gcid, scope: SCOPE,
-      callback: r => { if (r.error) return rej(new Error(r.error_description || r.error)); G.tok = r.access_token; G.exp = Date.now() + (r.expires_in || 3600) * 1000; res(G.tok); },
+      callback: r => { if (r.error) return rej(new Error(r.error_description || r.error)); if (google.accounts.oauth2.hasGrantedAllScopes && !google.accounts.oauth2.hasGrantedAllScopes(r, 'https://www.googleapis.com/auth/drive.file')) return rej(new Error('구글 로그인 창에서 "Google Drive" 접근 체크박스를 선택해야 합니다. 다시 연결해 주세요')); G.tok = r.access_token; G.exp = Date.now() + (r.expires_in || 3600) * 1000; res(G.tok); },
       error_callback: e => rej(new Error('로그인이 취소되었거나 팝업이 막혔습니다 (' + (e.type || '') + ')')) });
     tc.requestAccessToken({ prompt: DB.gLinked ? '' : 'consent' });
   });
 }
 async function gapi(url, opt = {}) {
   const r = await fetch(url, Object.assign({}, opt, { headers: Object.assign({ Authorization: 'Bearer ' + G.tok }, opt.headers || {}) }));
-  if (!r.ok) throw new Error('구글 응답 오류 ' + r.status);
+  if (!r.ok) { if (r.status === 401 || r.status === 403) { G.tok = null; G.exp = 0; } throw new Error('구글 응답 오류 ' + r.status + (r.status === 401 ? ' (로그인이 만료됨 — 다시 눌러 주세요)' : '')); }
   return r;
 }
 /* 병합: 프로젝트별로 수정시각이 더 최근인 쪽을 채택, 삭제 기록 반영 */
