@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>웹소 집필 노트</title>
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#7a4b2a">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="웹소노트">
+<style>
+:root{--bg:#f4efe6;--card:#fffdf8;--ink:#2b2622;--mut:#8a8176;--line:#e2d9c8;--acc:#7a4b2a;--acc2:#a8683b;--warn:#b3402a;--ok:#3d6b4a}
+@media(prefers-color-scheme:dark){:root{--bg:#1d1b19;--card:#262320;--ink:#ece6dc;--mut:#9d9487;--line:#3a3530;--acc:#d6a273;--acc2:#e3b98f;--warn:#e07a63;--ok:#7fb48c}}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,"Apple SD Gothic Neo","Noto Sans KR","Malgun Gothic",sans-serif;font-size:15px}
+#app{max-width:520px;margin:0 auto;min-height:100vh;padding-bottom:84px}
+header.top{position:sticky;top:0;z-index:5;background:var(--bg);display:flex;align-items:center;gap:8px;padding:10px 12px;border-bottom:1px solid var(--line)}
+header.top h1{font-size:16px;margin:0;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.st{font-size:11px;color:var(--mut);text-align:right;line-height:1.3}
+.st.dirty{color:var(--warn)}
+button{font:inherit;color:inherit;border:1px solid var(--line);background:var(--card);border-radius:10px;padding:8px 12px;cursor:pointer}
+button.pri{background:var(--acc);color:#fff;border-color:var(--acc)}
+button.ghost{border-color:transparent;background:transparent}
+button.danger{color:var(--warn)}
+button.sm{padding:4px 9px;font-size:13px}
+.wrap{padding:12px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:10px}
+.row{display:flex;align-items:center;gap:8px}
+.row.sp{justify-content:space-between}
+.proj{cursor:pointer}
+.proj b{font-size:16px}
+.mut{color:var(--mut);font-size:12.5px}
+.tabs{display:flex;gap:6px;margin-bottom:10px}
+.tabs button{flex:1}
+.tabs button.on{background:var(--acc);color:#fff;border-color:var(--acc)}
+.item{display:flex;justify-content:space-between;align-items:center;padding:13px 14px;cursor:pointer}
+.item+.item{border-top:1px solid var(--line)}
+.list{background:var(--card);border:1px solid var(--line);border-radius:14px;overflow:hidden;margin-bottom:10px}
+label.f{display:block;font-size:12.5px;color:var(--mut);margin:12px 0 4px}
+textarea,input[type=text],input[type=email]{width:100%;font:inherit;color:inherit;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:10px;resize:none;overflow:hidden}
+textarea:focus,input:focus{outline:2px solid var(--acc2);outline-offset:0}
+.page{font-family:"Noto Serif KR","Nanum Myeongjo","Batang",serif;line-height:1.85;min-height:300px}
+.bar{position:fixed;left:0;right:0;bottom:0;z-index:6;background:var(--card);border-top:1px solid var(--line);padding:8px 12px calc(8px + env(safe-area-inset-bottom));display:flex;gap:8px;align-items:center;max-width:520px;margin:0 auto}
+.bar .cnt{flex:1;font-size:12.5px;line-height:1.35}
+details{border:1px solid var(--line);border-radius:12px;margin-bottom:8px;background:var(--card)}
+details>summary{padding:11px 12px;cursor:pointer;font-weight:600;list-style:none}
+details>summary::-webkit-details-marker{display:none}
+details>div.in{padding:0 12px 12px}
+.sub{border-left:3px solid var(--line);padding-left:10px;margin:10px 0}
+.person{border:1px dashed var(--line);border-radius:10px;padding:8px;margin:8px 0}
+table{width:100%;border-collapse:collapse;font-size:13.5px}
+td,th{padding:6px 4px;border-bottom:1px solid var(--line);text-align:right}
+td:first-child,th:first-child{text-align:left}
+tr.tot td{font-weight:700;background:rgba(122,75,42,.08)}
+tr.grp td{text-align:left;color:var(--mut);font-size:12px;padding-top:12px}
+#modal{position:fixed;inset:0;background:rgba(0,0,0,.45);display:none;align-items:flex-end;justify-content:center;z-index:20}
+#modal.on{display:flex}
+#modal .box{background:var(--bg);width:100%;max-width:520px;max-height:88vh;overflow:auto;border-radius:18px 18px 0 0;padding:16px}
+#modal h3{margin:0 0 10px}
+.opt{display:flex;gap:8px;align-items:flex-start;padding:9px 0}
+.opt input{margin-top:3px}
+.sp-item{padding:8px 0;border-bottom:1px solid var(--line);font-size:13.5px}
+.sp-item mark{background:rgba(224,160,60,.35);color:inherit}
+.chip{display:inline-block;margin:3px 4px 3px 0;padding:5px 10px;border-radius:16px;font-size:13px;border:1px solid var(--line);background:var(--card)}.chip.on{background:var(--acc);color:#fff;border-color:var(--acc)}.toast{position:fixed;left:50%;bottom:90px;transform:translateX(-50%);background:#2b2622;color:#fff;padding:9px 14px;border-radius:20px;font-size:13px;z-index:30;opacity:0;transition:opacity .2s;pointer-events:none}
+.toast.on{opacity:.95}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<div id="modal"></div>
+<div class="toast" id="toast"></div>
+<script>
+const HWPX = {"files": {"mimetype": "application/hwp+zip", "version.xml": "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\" ?><hv:HCFVersion xmlns:hv=\"http://www.hancom.co.kr/hwpml/2011/version\" tagetApplication=\"WORDPROCESSOR\" major=\"5\" minor=\"1\" micro=\"1\" buildNumber=\"0\" os=\"1\" xmlVersion=\"1.5\" application=\"Hancom Office Hangul\" appVersion=\"13, 0, 0, 1408 WIN32LEWindows_10\"/>", "settings.xml": "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\" ?><ha:HWPApplicationSetting xmlns:ha=\"http://www.hancom.co.kr/hwpml/2011/app\" xmlns:config=\"urn:oasis:names:tc:opendocument:xmlns:config:1.0\"><ha:CaretPosition listIDRef=\"0\" paraIDRef=\"0\" pos=\"16\"/><\/ha:HWPApplicationSetting>", "META-INF/container.xml": "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\" ?><ocf:container xmlns:ocf=\"urn:oasis:names:tc:opendocument:xmlns:container\" xmlns:hpf=\"http://www.hancom.co.kr/schema/2011/hpf\"><ocf:rootfiles><ocf:rootfile full-path=\"Contents/content.hpf\" media-type=\"application/hwpml-package+xml\"/><ocf:rootfile full-path=\"Preview/PrvText.txt\" media-type=\"text/plain\"/><ocf:rootfile full-path=\"META-INF/container.rdf\" media-type=\"application/rdf+xml\"/><\/ocf:rootfiles><\/ocf:container>", "META-INF/container.rdf": "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\" ?><rdf:RDF xmlns:rdf=\"http://www.w3.org/1999/02/22-rdf-syntax-ns#\"><rdf:Description rdf:about=\"\"><ns0:hasPart xmlns:ns0=\"http://www.hancom.co.kr/hwpml/2016/meta/pkg#\" rdf:resource=\"Contents/header.xml\"/><\/rdf:Description><rdf:Description rdf:about=\"Contents/header.xml\"><rdf:type rdf:resource=\"http://www.hancom.co.kr/hwpml/2016/meta/pkg#HeaderFile\"/><\/rdf:Description><rdf:Description rdf:about=\"\"><ns0:hasPart xmlns:ns0=\"http://www.hancom.co.kr/hwpml/2016/meta/pkg#\" rdf:resource=\"Contents/section0.xml\"/><\/rdf:Description><rdf:Description rdf:about=\"Contents/section0.xml\"><rdf:type rdf:resource=\"http://www.hancom.co.kr/hwpml/2016/meta/pkg#SectionFile\"/><\/rdf:Description><rdf:Description rdf:about=\"\"><rdf:type rdf:resource=\"http://www.hancom.co.kr/hwpml/2016/meta/pkg#Document\"/><\/rdf:Description><\/rdf:RDF>", "META-INF/manifest.xml": "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\" ?><odf:manifest xmlns:odf=\"urn:oasis:names:tc:opendocument:xmlns:manifest:1.0\"/>", "Contents/content.hpf": "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\" ?><opf:package xmlns:ha=\"http://www.hancom.co.kr/hwpml/2011/app\" xmlns:hp=\"http://www.hancom.co.kr/hwpml/2011/paragraph\" xmlns:hp10=\"http://www.hancom.co.kr/hwpml/2016/paragraph\" xmlns:hs=\"http://www.hancom.co.kr/hwpml/2011/section\" xmlns:hc=\"http://www.hancom.co.kr/hwpml/2011/core\" xmlns:hh=\"http://www.hancom.co.kr/hwpml/2011/head\" xmlns:hhs=\"http://www.hancom.co.kr/hwpml/2011/history\" xmlns:hm=\"http://www.hancom.co.kr/hwpml/2011/master-page\" xmlns:hpf=\"http://www.hancom.co.kr/schema/2011/hpf\" xmlns:dc=\"http://purl.org/dc/elements/1.1/\" xmlns:opf=\"http://www.idpf.org/2007/opf/\" xmlns:ooxmlchart=\"http://www.hancom.co.kr/hwpml/2016/ooxmlchart\" xmlns:hwpunitchar=\"http://www.hancom.co.kr/hwpml/2016/HwpUnitChar\" xmlns:epub=\"http://www.idpf.org/2007/ops\" xmlns:config=\"urn:oasis:names:tc:opendocument:xmlns:config:1.0\" version=\"\" unique-identifier=\"\" id=\"\"><opf:metadata><opf:title/><opf:language>ko<\/opf:language><opf:meta name=\"creator\" content=\"text\">synthetic-fixture-author<\/opf:meta><opf:meta name=\"subject\" content=\"text\"/><opf:meta name=\"description\" content=\"text\"/><opf:meta name=\"lastsaveby\" content=\"text\">synthetic-fixture-author<\/opf:meta><opf:meta name=\"CreatedDate\" content=\"text\">2025-09-17T04:32:50Z<\/opf:meta><opf:meta name=\"ModifiedDate\" content=\"text\">2025-09-17T04:33:13Z<\/opf:meta><opf:meta name=\"date\" content=\"text\">2025년 9월 17일 수요일 오후 1:32:50<\/opf:meta><opf:meta name=\"keyword\" content=\"text\"/><\/opf:metadata><opf:manifest><opf:item id=\"header\" href=\"Contents/header.xml\" media-type=\"application/xml\"/><opf:item id=\"section0\" href=\"Contents/section0.xml\" media-type=\"application/xml\"/><opf:item id=\"settings\" href=\"settings.xml\" media-type=\"application/xml\"/><\/opf:manifest><opf:spine><opf:itemref idref=\"header\" linear=\"yes\"/><opf:itemref idref=\"section0\" linear=\"yes\"/><\/opf:spine><\/opf:package>", "Contents/header.xml": "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\" ?><hh:head xmlns:ha=\"http://www.hancom.co.kr/hwpml/2011/app\" xmlns:hp=\"http://www.hancom.co.kr/hwpml/2011/paragraph\" xmlns:hp10=\"http://www.hancom.co.kr/hwpml/2016/paragraph\" xmlns:hs=\"http://www.hancom.co.kr/hwpml/2011/section\" xmlns:hc=\"http://www.hancom.co.kr/hwpml/2011/core\" xmlns:hh=\"http://www.hancom.co.kr/hwpml/2011/head\" xmlns:hhs=\"http://www.hancom.co.kr/hwpml/2011/history\" xmlns:hm=\"http://www.hancom.co.kr/hwpml/2011/master-page\" xmlns:hpf=\"http://www.hancom.co.kr/schema/2011/hpf\" xmlns:dc=\"http://purl.org/dc/elements/1.1/\" xmlns:opf=\"http://www.idpf.org/2007/opf/\" xmlns:ooxmlchart=\"http://www.hancom.co.kr/hwpml/2016/ooxmlchart\" xmlns:hwpunitchar=\"http://www.hancom.co.kr/hwpml/2016/HwpUnitChar\" xmlns:epub=\"http://www.idpf.org/2007/ops\" xmlns:config=\"urn:oasis:names:tc:opendocument:xmlns:config:1.0\" version=\"1.5\" secCnt=\"1\"><hh:beginNum page=\"1\" footnote=\"1\" endnote=\"1\" pic=\"1\" tbl=\"1\" equation=\"1\"/><hh:refList><hh:fontfaces itemCnt=\"7\"><hh:fontface lang=\"HANGUL\" fontCnt=\"2\"><hh:font id=\"0\" face=\"함초롬돋움\" type=\"TTF\" isEmbedded=\"0\"><hh:typeInfo familyType=\"FCAT_GOTHIC\" weight=\"6\" proportion=\"4\" contrast=\"0\" strokeVariation=\"1\" armStyle=\"1\" letterform=\"1\" midline=\"1\" xHeight=\"1\"/><\/hh:font><hh:font id=\"1\" face=\"함초롬바탕\" type=\"TTF\" isEmbedded=\"0\"><hh:typeInfo familyType=\"FCAT_GOTHIC\" weight=\"6\" proportion=\"4\" contrast=\"0\" strokeVariation=\"1\" armStyle=\"1\" letterform=\"1\" midline=\"1\" xHeight=\"1\"/><\/hh:font><\/hh:fontface><hh:fontface lang=\"LATIN\" fontCnt=\"2\"><hh:font id=\"0\" face=\"함초롬돋움\" type=\"TTF\" isEmbedded=\"0\"><hh:typeInfo familyType=\"FCAT_GOTHIC\" weight=\"6\" proportion=\"4\" contrast=\"0\" strokeVariation=\"1\" armStyle=\"1\" letterform=\"1\" midline=\"1\" xHeight=\"1\"/><\/hh:font><hh:font id=\"1\" face=\"함초롬바탕\" type=\"TTF\" isEmbedded=\"0\"><hh:typeInfo familyType=\"FCAT_GOTHIC\" weight=\"6\" proportion=\"4\" contrast=\"0\" strokeVariation=\"1\" armStyle=\"1\" letterform=\"1\" midline=\"1\" xHeight=\"1\"/><\/hh:font><\/hh:fontface><hh:fontface lang=\"HANJA\" fontCnt=\"2\"><hh:font id=\"0\" face=\"함초롬돋움\" type=\"TTF\" isEmbedded=\"0\"><hh:typeInfo familyType=\"FCAT_GOTHIC\" weight=\"6\" proportion=\"4\" contrast=\"0\" strokeVariation=\"1\" armStyle=\"1\" letterform=\"1\" midline=\"1\" xHeight=\"1\"/><\/hh:font><hh:font id=\"1\" face=\"함초롬바탕\" type=\"TTF\" isEmbedded=\"0\"><hh:typeInfo familyType=\"FCAT_GOTHIC\" weight=\"6\" proportion=\"4\" contrast=\"0\" strokeVariation=\"1\" armStyle=\"1\" letterform=\"1\" midline=\"1\" xHeight=\"1\"/><\/hh:font><\/hh:fontface><hh:fontface lang=\"JAPANESE\" fontCnt=\"2\"><hh:font id=\"0\" face=\"함초롬돋움\" type=\"TTF\" isEmbedded=\"0\"><hh:typeInfo familyType=\"FCAT_GOTHIC\" weight=\"6\" proportion=\"4\" contrast=\"0\" strokeVariation=\"1\" armStyle=\"1\" letterform=\"1\" midline=\"1\" xHeight=\"1\"/><\/hh:font><hh:font id=\"1\" face=\"함초롬바탕\" type=\"TTF\" isEmbedded=\"0\"><hh:typeInfo familyType=\"FCAT_GOTHIC\" weight=\"6\" proportion=\"4\" contrast=\"0\" strokeVariation=\"1\" armStyle=\"1\" letterform=\"1\" midline=\"1\" xHeight=\"1\"/><\/hh:font><\/hh:fontface><hh:fontface lang=\"OTHER\" fontCnt=\"2\"><hh:font id=\"0\" face=\"함초롬돋움\" type=\"TTF\" isEmbedded=\"0\"><hh:typeInfo familyType=\"FCAT_GOTHIC\" weight=\"6\" proportion=\"4\" contrast=\"0\" strokeVariation=\"1\" armStyle=\"1\" letterform=\"1\" midline=\"1\" xHeight=\"1\"/><\/hh:font><hh:font id=\"1\" face=\"함초롬바탕\" type=\"TTF\" isEmbedded=\"0\"><hh:typeInfo familyType=\"FCAT_GOTHIC\" weight=\"6\" proportion=\"4\" contrast=\"0\" strokeVariation=\"1\" armStyle=\"1\" letterform=\"1\" midline=\"1\" xHeight=\"1\"/><\/hh:font><\/hh:fontface><hh:fontface lang=\"SYMBOL\" fontCnt=\"2\"><hh:font id=\"0\" face=\"함초롬돋움\" type=\"TTF\" isEmbedded=\"0\"><hh:typeInfo familyType=\"FCAT_GOTHIC\" weight=\"6\" proportion=\"4\" contrast=\"0\" strokeVariation=\"1\" armStyle=\"1\" letterform=\"1\" midline=\"1\" xHeight=\"1\"/><\/hh:font><hh:font id=\"1\" face=\"함초롬바탕\" type=\"TTF\" isEmbedded=\"0\"><hh:typeInfo familyType=\"FCAT_GOTHIC\" weight=\"6\" proportion=\"4\" contrast=\"0\" strokeVariation=\"1\" armStyle=\"1\" letterform=\"1\" midline=\"1\" xHeight=\"1\"/><\/hh:font><\/hh:fontface><hh:fontface lang=\"USER\" fontCnt=\"2\"><hh:font id=\"0\" face=\"함초롬돋움\" type=\"TTF\" isEmbedded=\"0\"><hh:typeInfo familyType=\"FCAT_GOTHIC\" weight=\"6\" proportion=\"4\" contrast=\"0\" strokeVariation=\"1\" armStyle=\"1\" letterform=\"1\" midline=\"1\" xHeight=\"1\"/><\/hh:font><hh:font id=\"1\" face=\"함초롬바탕\" type=\"TTF\" isEmbedded=\"0\"><hh:typeInfo familyType=\"FCAT_GOTHIC\" weight=\"6\" proportion=\"4\" contrast=\"0\" strokeVariation=\"1\" armStyle=\"1\" letterform=\"1\" midline=\"1\" xHeight=\"1\"/><\/hh:font><\/hh:fontface><\/hh:fontfaces><hh:borderFills itemCnt=\"2\"><hh:borderFill id=\"1\" threeD=\"0\" shadow=\"0\" centerLine=\"NONE\" breakCellSeparateLine=\"0\"><hh:slash type=\"NONE\" Crooked=\"0\" isCounter=\"0\"/><hh:backSlash type=\"NONE\" Crooked=\"0\" isCounter=\"0\"/><hh:leftBorder type=\"NONE\" width=\"0.1 mm\" color=\"#000000\"/><hh:rightBorder type=\"NONE\" width=\"0.1 mm\" color=\"#000000\"/><hh:topBorder type=\"NONE\" width=\"0.1 mm\" color=\"#000000\"/><hh:bottomBorder type=\"NONE\" width=\"0.1 mm\" color=\"#000000\"/><hh:diagonal type=\"SOLID\" width=\"0.1 mm\" color=\"#000000\"/><\/hh:borderFill><hh:borderFill id=\"2\" threeD=\"0\" shadow=\"0\" centerLine=\"NONE\" breakCellSeparateLine=\"0\"><hh:slash type=\"NONE\" Crooked=\"0\" isCounter=\"0\"/><hh:backSlash type=\"NONE\" Crooked=\"0\" isCounter=\"0\"/><hh:leftBorder type=\"NONE\" width=\"0.1 mm\" color=\"#000000\"/><hh:rightBorder type=\"NONE\" width=\"0.1 mm\" color=\"#000000\"/><hh:topBorder type=\"NONE\" width=\"0.1 mm\" color=\"#000000\"/><hh:bottomBorder type=\"NONE\" width=\"0.1 mm\" color=\"#000000\"/><hh:diagonal type=\"SOLID\" width=\"0.1 mm\" color=\"#000000\"/><hc:fillBrush><hc:winBrush faceColor=\"none\" hatchColor=\"#999999\" alpha=\"0\"/><\/hc:fillBrush><\/hh:borderFill><\/hh:borderFills><hh:charProperties itemCnt=\"9\"><hh:charPr id=\"0\" height=\"1000\" textColor=\"#000000\" shadeColor=\"none\" useFontSpace=\"0\" useKerning=\"0\" symMark=\"NONE\" borderFillIDRef=\"2\"><hh:fontRef hangul=\"1\" latin=\"1\" hanja=\"1\" japanese=\"1\" other=\"1\" symbol=\"1\" user=\"1\"/><hh:ratio hangul=\"100\" latin=\"100\" hanja=\"100\" japanese=\"100\" other=\"100\" symbol=\"100\" user=\"100\"/><hh:spacing hangul=\"0\" latin=\"0\" hanja=\"0\" japanese=\"0\" other=\"0\" symbol=\"0\" user=\"0\"/><hh:relSz hangul=\"100\" latin=\"100\" hanja=\"100\" japanese=\"100\" other=\"100\" symbol=\"100\" user=\"100\"/><hh:offset hangul=\"0\" latin=\"0\" hanja=\"0\" japanese=\"0\" other=\"0\" symbol=\"0\" user=\"0\"/><hh:underline type=\"NONE\" shape=\"SOLID\" color=\"#000000\"/><hh:strikeout shape=\"NONE\" color=\"#000000\"/><hh:outline type=\"NONE\"/><hh:shadow type=\"NONE\" color=\"#C0C0C0\" offsetX=\"10\" offsetY=\"10\"/><\/hh:charPr><hh:charPr id=\"1\" height=\"1000\" textColor=\"#000000\" shadeColor=\"none\" useFontSpace=\"0\" useKerning=\"0\" symMark=\"NONE\" borderFillIDRef=\"2\"><hh:fontRef hangul=\"0\" latin=\"0\" hanja=\"0\" japanese=\"0\" other=\"0\" symbol=\"0\" user=\"0\"/><hh:ratio hangul=\"100\" latin=\"100\" hanja=\"100\" japanese=\"100\" other=\"100\" symbol=\"100\" user=\"100\"/><hh:spacing hangul=\"0\" latin=\"0\" hanja=\"0\" japanese=\"0\" other=\"0\" symbol=\"0\" user=\"0\"/><hh:relSz hangul=\"100\" latin=\"100\" hanja=\"100\" japanese=\"100\" other=\"100\" symbol=\"100\" user=\"100\"/><hh:offset hangul=\"0\" latin=\"0\" hanja=\"0\" japanese=\"0\" other=\"0\" symbol=\"0\" user=\"0\"/><hh:underline type=\"NONE\" shape=\"SOLID\" color=\"#000000\"/><hh:strikeout shape=\"NONE\" color=\"#000000\"/><hh:outline type=\"NONE\"/><hh:shadow type=\"NONE\" color=\"#C0C0C0\" offsetX=\"10\" offsetY=\"10\"/><\/hh:charPr><hh:charPr id=\"2\" height=\"900\" textColor=\"#000000\" shadeColor=\"none\" useFontSpace=\"0\" useKerning=\"0\" symMark=\"NONE\" borderFillIDRef=\"2\"><hh:fontRef hangul=\"0\" latin=\"0\" hanja=\"0\" japanese=\"0\" other=\"0\" symbol=\"0\" user=\"0\"/><hh:ratio hangul=\"100\" latin=\"100\" hanja=\"100\" japanese=\"100\" other=\"100\" symbol=\"100\" user=\"100\"/><hh:spacing hangul=\"0\" latin=\"0\" hanja=\"0\" japanese=\"0\" other=\"0\" symbol=\"0\" user=\"0\"/><hh:relSz hangul=\"100\" latin=\"100\" hanja=\"100\" japanese=\"100\" other=\"100\" symbol=\"100\" user=\"100\"/><hh:offset hangul=\"0\" latin=\"0\" hanja=\"0\" japanese=\"0\" other=\"0\" symbol=\"0\" user=\"0\"/><hh:underline type=\"NONE\" shape=\"SOLID\" color=\"#000000\"/><hh:strikeout shape=\"NONE\" color=\"#000000\"/><hh:outline type=\"NONE\"/><hh:shadow type=\"NONE\" color=\"#C0C0C0\" offsetX=\"10\" offsetY=\"10\"/><\/hh:charPr><hh:charPr id=\"3\" height=\"900\" textColor=\"#000000\" shadeColor=\"none\" useFontSpace=\"0\" useKerning=\"0\" symMark=\"NONE\" borderFillIDRef=\"2\"><hh:fontRef hangul=\"1\" latin=\"1\" hanja=\"1\" japanese=\"1\" other=\"1\" symbol=\"1\" user=\"1\"/><hh:ratio hangul=\"100\" latin=\"100\" hanja=\"100\" japanese=\"100\" other=\"100\" symbol=\"100\" user=\"100\"/><hh:spacing hangul=\"0\" latin=\"0\" hanja=\"0\" japanese=\"0\" other=\"0\" symbol=\"0\" user=\"0\"/><hh:relSz hangul=\"100\" latin=\"100\" hanja=\"100\" japanese=\"100\" other=\"100\" symbol=\"100\" user=\"100\"/><hh:offset hangul=\"0\" latin=\"0\" hanja=\"0\" japanese=\"0\" other=\"0\" symbol=\"0\" user=\"0\"/><hh:underline type=\"NONE\" shape=\"SOLID\" color=\"#000000\"/><hh:strikeout shape=\"NONE\" color=\"#000000\"/><hh:outline type=\"NONE\"/><hh:shadow type=\"NONE\" color=\"#C0C0C0\" offsetX=\"10\" offsetY=\"10\"/><\/hh:charPr><hh:charPr id=\"4\" height=\"900\" textColor=\"#000000\" shadeColor=\"none\" useFontSpace=\"0\" useKerning=\"0\" symMark=\"NONE\" borderFillIDRef=\"2\"><hh:fontRef hangul=\"0\" latin=\"0\" hanja=\"0\" japanese=\"0\" other=\"0\" symbol=\"0\" user=\"0\"/><hh:ratio hangul=\"100\" latin=\"100\" hanja=\"100\" japanese=\"100\" other=\"100\" symbol=\"100\" user=\"100\"/><hh:spacing hangul=\"-5\" latin=\"-5\" hanja=\"-5\" japanese=\"-5\" other=\"-5\" symbol=\"-5\" user=\"-5\"/><hh:relSz hangul=\"100\" latin=\"100\" hanja=\"100\" japanese=\"100\" other=\"100\" symbol=\"100\" user=\"100\"/><hh:offset hangul=\"0\" latin=\"0\" hanja=\"0\" japanese=\"0\" other=\"0\" symbol=\"0\" user=\"0\"/><hh:underline type=\"NONE\" shape=\"SOLID\" color=\"#000000\"/><hh:strikeout shape=\"NONE\" color=\"#000000\"/><hh:outline type=\"NONE\"/><hh:shadow type=\"NONE\" color=\"#C0C0C0\" offsetX=\"10\" offsetY=\"10\"/><\/hh:charPr><hh:charPr id=\"5\" height=\"1600\" textColor=\"#2E74B5\" shadeColor=\"none\" useFontSpace=\"0\" useKerning=\"0\" symMark=\"NONE\" borderFillIDRef=\"2\"><hh:fontRef hangul=\"0\" latin=\"0\" hanja=\"0\" japanese=\"0\" other=\"0\" symbol=\"0\" user=\"0\"/><hh:ratio hangul=\"100\" latin=\"100\" hanja=\"100\" japanese=\"100\" other=\"100\" symbol=\"100\" user=\"100\"/><hh:spacing hangul=\"0\" latin=\"0\" hanja=\"0\" japanese=\"0\" other=\"0\" symbol=\"0\" user=\"0\"/><hh:relSz hangul=\"100\" latin=\"100\" hanja=\"100\" japanese=\"100\" other=\"100\" symbol=\"100\" user=\"100\"/><hh:offset hangul=\"0\" latin=\"0\" hanja=\"0\" japanese=\"0\" other=\"0\" symbol=\"0\" user=\"0\"/><hh:underline type=\"NONE\" shape=\"SOLID\" color=\"#000000\"/><hh:strikeout shape=\"NONE\" color=\"#000000\"/><hh:outline type=\"NONE\"/><hh:shadow type=\"NONE\" color=\"#C0C0C0\" offsetX=\"10\" offsetY=\"10\"/><\/hh:charPr><hh:charPr id=\"6\" height=\"1100\" textColor=\"#000000\" shadeColor=\"none\" useFontSpace=\"0\" useKerning=\"0\" symMark=\"NONE\" borderFillIDRef=\"2\"><hh:fontRef hangul=\"0\" latin=\"0\" hanja=\"0\" japanese=\"0\" other=\"0\" symbol=\"0\" user=\"0\"/><hh:ratio hangul=\"100\" latin=\"100\" hanja=\"100\" japanese=\"100\" other=\"100\" symbol=\"100\" user=\"100\"/><hh:spacing hangul=\"0\" latin=\"0\" hanja=\"0\" japanese=\"0\" other=\"0\" symbol=\"0\" user=\"0\"/><hh:relSz hangul=\"100\" latin=\"100\" hanja=\"100\" japanese=\"100\" other=\"100\" symbol=\"100\" user=\"100\"/><hh:offset hangul=\"0\" latin=\"0\" hanja=\"0\" japanese=\"0\" other=\"0\" symbol=\"0\" user=\"0\"/><hh:underline type=\"NONE\" shape=\"SOLID\" color=\"#000000\"/><hh:strikeout shape=\"NONE\" color=\"#000000\"/><hh:outline type=\"NONE\"/><hh:shadow type=\"NONE\" color=\"#C0C0C0\" offsetX=\"10\" offsetY=\"10\"/><\/hh:charPr><hh:charPr id=\"7\" height=\"1400\" textColor=\"#000000\" shadeColor=\"none\" useFontSpace=\"0\" useKerning=\"0\" symMark=\"NONE\" borderFillIDRef=\"2\"><hh:fontRef hangul=\"1\" latin=\"1\" hanja=\"1\" japanese=\"1\" other=\"1\" symbol=\"1\" user=\"1\"/><hh:ratio hangul=\"100\" latin=\"100\" hanja=\"100\" japanese=\"100\" other=\"100\" symbol=\"100\" user=\"100\"/><hh:spacing hangul=\"0\" latin=\"0\" hanja=\"0\" japanese=\"0\" other=\"0\" symbol=\"0\" user=\"0\"/><hh:relSz hangul=\"100\" latin=\"100\" hanja=\"100\" japanese=\"100\" other=\"100\" symbol=\"100\" user=\"100\"/><hh:offset hangul=\"0\" latin=\"0\" hanja=\"0\" japanese=\"0\" other=\"0\" symbol=\"0\" user=\"0\"/><hh:bold/><hh:underline type=\"NONE\" shape=\"SOLID\" color=\"#000000\"/><hh:strikeout shape=\"NONE\" color=\"#000000\"/><hh:outline type=\"NONE\"/><hh:shadow type=\"NONE\" color=\"#C0C0C0\" offsetX=\"10\" offsetY=\"10\"/><\/hh:charPr><hh:charPr id=\"8\" height=\"1200\" textColor=\"#000000\" shadeColor=\"none\" useFontSpace=\"0\" useKerning=\"0\" symMark=\"NONE\" borderFillIDRef=\"2\"><hh:fontRef hangul=\"1\" latin=\"1\" hanja=\"1\" japanese=\"1\" other=\"1\" symbol=\"1\" user=\"1\"/><hh:ratio hangul=\"100\" latin=\"100\" hanja=\"100\" japanese=\"100\" other=\"100\" symbol=\"100\" user=\"100\"/><hh:spacing hangul=\"0\" latin=\"0\" hanja=\"0\" japanese=\"0\" other=\"0\" symbol=\"0\" user=\"0\"/><hh:relSz hangul=\"100\" latin=\"100\" hanja=\"100\" japanese=\"100\" other=\"100\" symbol=\"100\" user=\"100\"/><hh:offset hangul=\"0\" latin=\"0\" hanja=\"0\" japanese=\"0\" other=\"0\" symbol=\"0\" user=\"0\"/><hh:bold/><hh:underline type=\"NONE\" shape=\"SOLID\" color=\"#000000\"/><hh:strikeout shape=\"NONE\" color=\"#000000\"/><hh:outline type=\"NONE\"/><hh:shadow type=\"NONE\" color=\"#C0C0C0\" offsetX=\"10\" offsetY=\"10\"/><\/hh:charPr><\/hh:charProperties><hh:tabProperties itemCnt=\"3\"><hh:tabPr id=\"0\" autoTabLeft=\"0\" autoTabRight=\"0\"/><hh:tabPr id=\"1\" autoTabLeft=\"1\" autoTabRight=\"0\"/><hh:tabPr id=\"2\" autoTabLeft=\"0\" autoTabRight=\"1\"/><\/hh:tabProperties><hh:numberings itemCnt=\"1\"><hh:numbering id=\"1\" start=\"0\"><hh:paraHead start=\"1\" level=\"1\" align=\"LEFT\" useInstWidth=\"1\" autoIndent=\"1\" widthAdjust=\"0\" textOffsetType=\"PERCENT\" textOffset=\"50\" numFormat=\"DIGIT\" charPrIDRef=\"4294967295\" checkable=\"0\">^1.<\/hh:paraHead><hh:paraHead start=\"1\" level=\"2\" align=\"LEFT\" useInstWidth=\"1\" autoIndent=\"1\" widthAdjust=\"0\" textOffsetType=\"PERCENT\" textOffset=\"50\" numFormat=\"HANGUL_SYLLABLE\" charPrIDRef=\"4294967295\" checkable=\"0\">^2.<\/hh:paraHead><hh:paraHead start=\"1\" level=\"3\" align=\"LEFT\" useInstWidth=\"1\" autoIndent=\"1\" widthAdjust=\"0\" textOffsetType=\"PERCENT\" textOffset=\"50\" numFormat=\"DIGIT\" charPrIDRef=\"4294967295\" checkable=\"0\">^3)<\/hh:paraHead><hh:paraHead start=\"1\" level=\"4\" align=\"LEFT\" useInstWidth=\"1\" autoIndent=\"1\" widthAdjust=\"0\" textOffsetType=\"PERCENT\" textOffset=\"50\" numFormat=\"HANGUL_SYLLABLE\" charPrIDRef=\"4294967295\" checkable=\"0\">^4)<\/hh:paraHead><hh:paraHead start=\"1\" level=\"5\" align=\"LEFT\" useInstWidth=\"1\" autoIndent=\"1\" widthAdjust=\"0\" textOffsetType=\"PERCENT\" textOffset=\"50\" numFormat=\"DIGIT\" charPrIDRef=\"4294967295\" checkable=\"0\">(^5)<\/hh:paraHead><hh:paraHead start=\"1\" level=\"6\" align=\"LEFT\" useInstWidth=\"1\" autoIndent=\"1\" widthAdjust=\"0\" textOffsetType=\"PERCENT\" textOffset=\"50\" numFormat=\"HANGUL_SYLLABLE\" charPrIDRef=\"4294967295\" checkable=\"0\">(^6)<\/hh:paraHead><hh:paraHead start=\"1\" level=\"7\" align=\"LEFT\" useInstWidth=\"1\" autoIndent=\"1\" widthAdjust=\"0\" textOffsetType=\"PERCENT\" textOffset=\"50\" numFormat=\"CIRCLED_DIGIT\" charPrIDRef=\"4294967295\" checkable=\"1\">^7<\/hh:paraHead><hh:paraHead start=\"1\" level=\"8\" align=\"LEFT\" useInstWidth=\"1\" autoIndent=\"1\" widthAdjust=\"0\" textOffsetType=\"PERCENT\" textOffset=\"50\" numFormat=\"CIRCLED_HANGUL_SYLLABLE\" charPrIDRef=\"4294967295\" checkable=\"1\">^8<\/hh:paraHead><hh:paraHead start=\"1\" level=\"9\" align=\"LEFT\" useInstWidth=\"1\" autoIndent=\"1\" widthAdjust=\"0\" textOffsetType=\"PERCENT\" textOffset=\"50\" numFormat=\"HANGUL_JAMO\" charPrIDRef=\"4294967295\" checkable=\"0\"/><hh:paraHead start=\"1\" level=\"10\" align=\"LEFT\" useInstWidth=\"1\" autoIndent=\"1\" widthAdjust=\"0\" textOffsetType=\"PERCENT\" textOffset=\"50\" numFormat=\"ROMAN_SMALL\" charPrIDRef=\"4294967295\" checkable=\"1\"/><\/hh:numbering><\/hh:numberings><hh:paraProperties itemCnt=\"20\"><hh:paraPr id=\"0\" tabPrIDRef=\"0\" condense=\"0\" fontLineHeight=\"0\" snapToGrid=\"1\" suppressLineNumbers=\"0\" checked=\"0\" textDir=\"LTR\"><hh:align horizontal=\"JUSTIFY\" vertical=\"BASELINE\"/><hh:heading type=\"NONE\" idRef=\"0\" level=\"0\"/><hh:breakSetting breakLatinWord=\"KEEP_WORD\" breakNonLatinWord=\"BREAK_WORD\" widowOrphan=\"0\" keepWithNext=\"0\" keepLines=\"0\" pageBreakBefore=\"0\" lineWrap=\"BREAK\"/><hh:autoSpacing eAsianEng=\"0\" eAsianNum=\"0\"/><hp:switch><hp:case hp:required-namespace=\"http://www.hancom.co.kr/hwpml/2016/HwpUnitChar\"><hh:margin><hc:intent value=\"0\" unit=\"HWPUNIT\"/><hc:left value=\"0\" unit=\"HWPUNIT\"/><hc:right value=\"0\" unit=\"HWPUNIT\"/><hc:prev value=\"0\" unit=\"HWPUNIT\"/><hc:next value=\"0\" unit=\"HWPUNIT\"/><\/hh:margin><hh:lineSpacing type=\"PERCENT\" value=\"160\" unit=\"HWPUNIT\"/><\/hp:case><hp:default><hh:margin><hc:intent value=\"0\" unit=\"HWPUNIT\"/><hc:left value=\"0\" unit=\"HWPUNIT\"/><hc:right value=\"0\" unit=\"HWPUNIT\"/><hc:prev value=\"0\" unit=\"HWPUNIT\"/><hc:next value=\"0\" unit=\"HWPUNIT\"/><\/hh:margin><hh:lineSpacing type=\"PERCENT\" value=\"160\" unit=\"HWPUNIT\"/><\/hp:default><\/hp:switch><hh:border borderFillIDRef=\"2\" offsetLeft=\"0\" offsetRight=\"0\" offsetTop=\"0\" offsetBottom=\"0\" connect=\"0\" ignoreMargin=\"0\"/><\/hh:paraPr><hh:paraPr id=\"1\" tabPrIDRef=\"0\" condense=\"0\" fontLineHeight=\"0\" snapToGrid=\"1\" suppressLineNumbers=\"0\" checked=\"0\" textDir=\"LTR\"><hh:align horizontal=\"JUSTIFY\" vertical=\"BASELINE\"/><hh:heading type=\"NONE\" idRef=\"0\" level=\"0\"/><hh:breakSetting breakLatinWord=\"KEEP_WORD\" breakNonLatinWord=\"KEEP_WORD\" widowOrphan=\"0\" keepWithNext=\"0\" keepLines=\"0\" pageBreakBefore=\"0\" lineWrap=\"BREAK\"/><hh:autoSpacing eAsianEng=\"0\" eAsianNum=\"0\"/><hp:switch><hp:case hp:required-namespace=\"http://www.hancom.co.kr/hwpml/2016/HwpUnitChar\"><hh:margin><hc:intent value=\"0\" unit=\"HWPUNIT\"/><hc:left value=\"1500\" unit=\"HWPUNIT\"/><hc:right value=\"0\" unit=\"HWPUNIT\"/><hc:prev value=\"0\" unit=\"HWPUNIT\"/><hc:next value=\"0\" unit=\"HWPUNIT\"/><\/hh:margin><hh:lineSpacing type=\"PERCENT\" value=\"160\" unit=\"HWPUNIT\"/><\/hp:case><hp:default><hh:margin><hc:intent value=\"0\" unit=\"HWPUNIT\"/><hc:left value=\"3000\" unit=\"HWPUNIT\"/><hc:right value=\"0\" unit=\"HWPUNIT\"/><hc:prev value=\"0\" unit=\"HWPUNIT\"/><hc:next value=\"0\" unit=\"HWPUNIT\"/><\/hh:margin><hh:lineSpacing type=\"PERCENT\" value=\"160\" unit=\"HWPUNIT\"/><\/hp:default><\/hp:switch><hh:border borderFillIDRef=\"2\" offsetLeft=\"0\" offsetRight=\"0\" offsetTop=\"0\" offsetBottom=\"0\" connect=\"0\" ignoreMargin=\"0\"/><\/hh:paraPr><hh:paraPr id=\"2\" tabPrIDRef=\"1\" condense=\"20\" fontLineHeight=\"0\" snapToGrid=\"1\" suppressLineNumbers=\"0\" checked=\"0\" textDir=\"LTR\"><hh:align horizontal=\"JUSTIFY\" vertical=\"BASELINE\"/><hh:heading type=\"OUTLINE\" idRef=\"0\" level=\"0\"/><hh:breakSetting breakLatinWord=\"KEEP_WORD\" breakNonLatinWord=\"KEEP_WORD\" widowOrphan=\"0\" keepWithNext=\"0\" keepLines=\"0\" pageBreakBefore=\"0\" lineWrap=\"BREAK\"/><hh:autoSpacing eAsianEng=\"0\" eAsianNum=\"0\"/><hp:switch><hp:case hp:required-namespace=\"http://www.hancom.co.kr/hwpml/2016/HwpUnitChar\"><hh:margin><hc:intent value=\"0\" unit=\"HWPUNIT\"/><hc:left value=\"1000\" unit=\"HWPUNIT\"/><hc:right value=\"0\" unit=\"HWPUNIT\"/><hc:prev value=\"0\" unit=\"HWPUNIT\"/><hc:next value=\"0\" unit=\"HWPUNIT\"/><\/hh:margin><hh:lineSpacing type=\"PERCENT\" value=\"160\" unit=\"HWPUNIT\"/><\/hp:case><hp:default><hh:margin><hc:intent value=\"0\" unit=\"HWPUNIT\"/><hc:left value=\"2000\" unit=\"HWPUNIT\"/><hc:right value=\"0\" unit=\"HWPUNIT\"/><hc:prev value=\"0\" unit=\"HWPUNIT\"/><hc:next value=\"0\" unit=\"HWPUNIT\"/><\/hh:margin><hh:lineSpacing type=\"PERCENT\" value=\"160\" unit=\"HWPUNIT\"/><\/hp:default><\/hp:switch><hh:border borderFillIDRef=\"2\" offsetLeft=\"0\" offsetRight=\"0\" offsetTop=\"0\" offsetBottom=\"0\" connect=\"0\" ignoreMargin=\"0\"/><\/hh:paraPr><hh:paraPr id=\"3\" tabPrIDRef=\"1\" condense=\"20\" fontLineHeight=\"0\" snapToGrid=\"1\" suppressLineNumbers=\"0\" checked=\"0\" textDir=\"LTR\"><hh:align horizontal=\"JUSTIFY\" vertical=\"BASELINE\"/><hh:heading type=\"OUTLINE\" idRef=\"0\" level=\"1\"/><hh:breakSetting breakLatinWord=\"KEEP_WORD\" breakNonLatinWord=\"KEEP_WORD\" widowOrphan=\"0\" keepWithNext=\"0\" keepLines=\"0\" pageBreakBefore=\"0\" lineWrap=\"BREAK\"/><hh:autoSpacing eAsianEng=\"0\" eAsianNum=\"0\"/><hp:switch><hp:case hp:required-namespace=\"http://www.hancom.co.kr/hwpml/2016/HwpUnitChar\"><hh:margin><hc:intent value=\"0\" unit=\"HWPUNIT\"/><hc:left value=\"2000\" unit=\"HWPUNIT\"/><hc:right value=\"0\" unit=\"HWPUNIT\"/><hc:prev value=\"0\" unit=\"HWPUNIT\"/><hc:next value=\"0\" unit=\"HWPUNIT\"/><\/hh:margin><hh:lineSpacing type=\"PERCENT\" value=\"160\" unit=\"HWPUNIT\"/><\/hp:case><hp:default><hh:margin><hc:intent value=\"0\" unit=\"HWPUNIT\"/><hc:left value=\"4000\" unit=\"HWPUNIT\"/><hc:right value=\"0\" unit=\"HWPUNIT\"/><hc:prev value=\"0\" unit=\"HWPUNIT\"/><hc:next value=\"0\" unit=\"HWPUNIT\"/><\/hh:margin><hh:lineSpacing type=\"PERCENT\" value=\"160\" unit=\"HWPUNIT\"/><\/hp:default><\/hp:switch><hh:border borderFillIDRef=\"2\" offsetLeft=\"0\" offsetRight=\"0\" offsetTop=\"0\" offsetBottom=\"0\" connect=\"0\" ignoreMargin=\"0\"/><\/hh:paraPr><hh:paraPr id=\"4\" tabPrIDRef=\"1\" condense=\"20\" fontLineHeight=\"0\" snapToGrid=\"1\" suppressLineNumbers=\"0\" checked=\"0\" textDir=\"LTR\"><hh:align horizontal=\"JUSTIFY\" vertical=\"BASELINE\"/><hh:heading type=\"OUTLINE\" idRef=\"0\" level=\"2\"/><hh:breakSetting breakLatinWord=\"KEEP_WORD\" breakNonLatinWord=\"KEEP_WORD\" widowOrphan=\"0\" keepWithNext=\"0\" keepLines=\"0\" pageBreakBefore=\"0\" lineWrap=\"BREAK\"/><hh:autoSpacing eAsianEng=\"0\" eAsianNum=\"0\"/><hp:switch><hp:case hp:required-namespace=\"http://www.hancom.co.kr/hwpml/2016/HwpUnitChar\"><hh:margin><hc:intent value=\"0\" unit=\"HWPUNIT\"/><hc:left value=\"3000\" unit=\"HWPUNIT\"/><hc:right value=\"0\" unit=\"HWPUNIT\"/><hc:prev value=\"0\" unit=\"HWPUNIT\"/><hc:next value=\"0\" unit=\"HWPUNIT\"/><\/hh:margin><hh:lineSpacing type=\"PERCENT\" value=\"160\" unit=\"HWPUNIT\"/><\/hp:case><hp:default><hh:margin><hc:intent value=\"0\" unit=\"HWPUNIT\"/><hc:left value=\"6000\" unit=\"HWPUNIT\"/><hc:right value=\"0\" unit=\"HWPUNIT\"/><hc:prev value=\"0\" unit=\"HWPUNIT\"/><hc:next value=\"0\" unit=\"HWPUNIT\"/><\/hh:margin><hh:lineSpacing type=\"PERCENT\" value=\"160\" unit=\"HWPUNIT\"/><\/hp:default><\/hp:switch><hh:border borderFillIDRef=\"2\" offsetLeft=\"0\" offsetRight=\"0\" offsetTop=\"0\" offsetBottom=\"0\" connect=\"0\" ignoreMargin=\"0\"/><\/hh:paraPr><hh:paraPr id=\"5\" tabPrIDRef=\"1\" condense=\"20\" fontLineHeight=\"0\" snapToGrid=\"1\" suppressLineNumbers=\"0\" checked=\"0\" textDir=\"LTR\"><hh:align horizontal=\"JUSTIFY\" vertical=\"BASELINE\"/><hh:heading type=\"OUTLINE\" idRef=\"0\" level=\"3\"/><hh:breakSetting breakLatinWord=\"KEEP_WORD\" breakNonLatinWord=\"KEEP_WORD\" widowOrphan=\"0\" keepWithNext=\"0\" keepLines=\"0\" pageBreakBefore=\"0\" lineWrap=\"BREAK\"/><hh:autoSpacing eAsianEng=\"0\" eAsianNum=\"0\"/><hp:switch><hp:case hp:required-namespace=\"http://www.hancom.co.kr/hwpml/2016/HwpUnitChar\"><hh:margin><hc:intent value=\"0\" unit=\"HWPUNIT\"/><hc:left value=\"4000\" unit=\"HWPUNIT\"/><hc:right value=\"0\" unit=\"HWPUNIT\"/><hc:prev value=\"0\" unit=\"HWPUNIT\"/><hc:next value=\"0\" unit=\"HWPUNIT\"/><\/hh:margin><hh:lineSpacing type=\"PERCENT\" value=\"160\" unit=\"HWPUNIT\"/><\/hp:case><hp:default><hh:margin><hc:intent value=\"0\" unit=\"HWPUNIT\"/><hc:left value=\"8000\" unit=\"HWPUNIT\"/><hc:right value=\"0\" unit=\"HWPUNIT\"/><hc:prev value=\"0\" unit=\"HWPUNIT\"/><hc:next value=\"0\" unit=\"HWPUNIT\"/><\/hh:margin><hh:lineSpacing type=\"PERCENT\" value=\"160\" unit=\"HWPUNIT\"/><\/hp:default><\/hp:switch><hh:border borderFillIDRef=\"2\" offsetLeft=\"0\" offsetRight=\"0\" offsetTop=\"0\" offsetBottom=\"0\" connect=\"0\" ignoreMargin=\"0\"/><\/hh:paraPr><hh:paraPr id=\"6\" tabPrIDRef=\"1\" condense=\"20\" fontLineHeight=\"0\" snapToGrid=\"1\" suppressLineNumbers=\"0\" checked=\"0\" textDir=\"LTR\"><hh:align horizontal=\"JUSTIFY\" vertical=\"BASELINE\"/><hh:heading type=\"OUTLINE\" idRef=\"0\" level=\"4\"/><hh:breakSetting breakLatinWord=\"KEEP_WORD\" breakNonLatinWord=\"KEEP_WORD\" widowOrphan=\"0\" keepWithNext=\"0\" keepLines=\"0\" pageBreakBefore=\"0\" lineWrap=\"BREAK\"/><hh:autoSpacing eAsianEng=\"0\" eAsianNum=\"0\"/><hp:switch><hp:case hp:required-namespace=\"http://www.hancom.co.kr/hwpml/2016/HwpUnitChar\"><hh:margin><hc:intent value=\"0\" unit=\"HWPUNIT\"/><hc:left value=\"5000\" unit=\"HWPUNIT\"/><hc:right value=\"0\" unit=\"HWPUNIT\"/><hc:prev value=\"0\" unit=\"HWPUNIT\"/><hc:next value=\"0\" unit=\"HWPUNIT\"/><\/hh:margin><hh:lineSpacing type=\"PERCENT\" value=\"160\" unit=\"HWPUNIT\"/><\/hp:case><hp:default><hh:margin><hc:intent value=\"0\" unit=\"HWPUNIT\"/><hc:left value=\"10000\" unit=\"HWPUNIT\"/><hc:right value=\"0\" unit=\"HWPUNIT\"/><hc:prev value=\"0\" unit=\"HWPUNIT\"/><hc:next value=\"0\" unit=\"HWPUNIT\"/><\/hh:margin><hh:lineSpacing type=\"PERCENT\" value=\"160\" unit=\"HWPUNIT\"/><\/hp:default><\/hp:switch><hh:border borderFillIDRef=\"2\" offsetLeft=\"0\" offsetRight=\"0\" offsetTop=\"0\" offsetBottom=\"0\" connect=\"0\" ignoreMargin=\"0\"/><\/hh:paraPr><hh:paraPr id=\"7\" tabPrIDRef=\"1\" condense=\"20\" fontLineHeight=\"0\" snapToGrid=\"1\" suppressLineNumbers=\"0\" checked=\"0\" textDir=\"LTR\"><hh:align horizontal=\"JUSTIFY\" vertical=\"BASELINE\"/><hh:heading type=\"OUTLINE\" idRef=\"0\" level=\"5\"/><hh:breakSetting breakLatinWord=\"KEEP_WORD\" breakNonLatinWord=\"KEEP_WORD\" widowOrphan=\"0\" keepWithNext=\"0\" keepLines=\"0\" pageBreakBefore=\"0\" lineWrap=\"BREAK\"/><hh:autoSpacing eAsianEng=\"0\" eAsianNum=\"0\"/><hp:switch><hp:case hp:required-namespace=\"http://www.hancom.co.kr/hwpml/2016/HwpUnitChar\"><hh:margin><hc:intent value=\"0\" unit=\"HWPUNIT\"/><hc:left value=\"6000\" unit=\"HWPUNIT\"/><hc:right value=\"0\" unit=\"HWPUNIT\"/><hc:prev value=\"0\" unit=\"HWPUNIT\"/><hc:next value=\"0\" unit=\"HWPUNIT\"/><\/hh:margin><hh:lineSpacing type=\"PERCENT\" value=\"160\" unit=\"HWPUNIT\"/><\/hp:case><hp:default><hh:margin><hc:intent value=\"0\" unit=\"HWPUNIT\"/><hc:left value=\"12000\" unit=\"HWPUNIT\"/><hc:right value=\"0\" unit=\"HWPUNIT\"/><hc:prev value=\"0\" unit=\"HWPUNIT\"/><hc:next value=\"0\" unit=\"HWPUNIT\"/><\/hh:margin><hh:lineSpacing type=\"PERCENT\" value=\"160\" unit=\"HWPUNIT\"/><\/hp:default><\/hp:switch><hh:border borderFillIDRef=\"2\" offsetLeft=\"0\" offsetRight=\"0\" offsetTop=\"0\" offsetBottom=\"0\" connect=\"0\" ignoreMargin=\"0\"/><\/hh:paraPr><hh:paraPr id=\"8\" tabPrIDRef=\"1\" condense=\"20\" fontLineHeight=\"0\" snapToGrid=\"1\" suppressLineNumbers=\"0\" checked=\"0\" textDir=\"LTR\"><hh:align horizontal=\"JUSTIFY\" vertical=\"BASELINE\"/><hh:heading type=\"OUTLINE\" idRef=\"0\" level=\"6\"/><hh:breakSetting breakLatinWord=\"KEEP_WORD\" breakNonLatinWord=\"KEEP_WORD\" widowOrphan=\"0\" keepWithNext=\"0\" keepLines=\"0\" pageBreakBefore=\"0\" lineWrap=\"BREAK\"/><hh:autoSpacing eAsianEng=\"0\" eAsianNum=\"0\"/><hp:switch><hp:case hp:required-namespace=\"http://www.hancom.co.kr/hwpml/2016/HwpUnitChar\"><hh:margin><hc:intent value=\"0\" unit=\"HWPUNIT\"/><hc:left value=\"7000\" unit=\"HWPUNIT\"/><hc:right value=\"0\" unit=\"HWPUNIT\"/><hc:prev value=\"0\" unit=\"HWPUNIT\"/><hc:next value=\"0\" unit=\"HWPUNIT\"/><\/hh:margin><hh:lineSpacing type=\"PERCENT\" value=\"160\" unit=\"HWPUNIT\"/><\/hp:case><hp:default><hh:margin><hc:intent value=\"0\" unit=\"HWPUNIT\"/><hc:left value=\"14000\" unit=\"HWPUNIT\"/><hc:right value=\"0\" unit=\"HWPUNIT\"/><hc:prev value=\"0\" unit=\"HWPUNIT\"/><hc:next value=\"0\" unit=\"HWPUNIT\"/><\/hh:margin><hh:lineSpacing type=\"PERCENT\" value=\"160\" unit=\"HWPUNIT\"/><\/hp:default><\/hp:switch><hh:border borderFillIDRef=\"2\" offsetLeft=\"0\" offsetRight=\"0\" offsetTop=\"0\" offsetBottom=\"0\" connect=\"0\" ignoreMargin=\"0\"/><\/hh:paraPr><hh:paraPr id=\"9\" tabPrIDRef=\"0\" condense=\"0\" fontLineHeight=\"0\" snapToGrid=\"1\" suppressLineNumbers=\"0\" checked=\"0\" textDir=\"LTR\"><hh:align horizontal=\"JUSTIFY\" vertical=\"BASELINE\"/><hh:heading type=\"NONE\" idRef=\"0\" level=\"0\"/><hh:breakSetting breakLatinWord=\"KEEP_WORD\" breakNonLatinWord=\"BREAK_WORD\" widowOrphan=\"0\" keepWithNext=\"0\" keepLines=\"0\" pageBreakBefore=\"0\" lineWrap=\"BREAK\"/><hh:autoSpacing eAsianEng=\"0\" eAsianNum=\"0\"/><hp:switch><hp:case hp:required-namespace=\"http://www.hancom.co.kr/hwpml/2016/HwpUnitChar\"><hh:margin><hc:intent value=\"0\" unit=\"HWPUNIT\"/><hc:left value=\"0\" unit=\"HWPUNIT\"/><hc:right value=\"0\" unit=\"HWPUNIT\"/><hc:prev value=\"0\" unit=\"HWPUNIT\"/><hc:next value=\"0\" unit=\"HWPUNIT\"/><\/hh:margin><hh:lineSpacing type=\"PERCENT\" value=\"150\" unit=\"HWPUNIT\"/><\/hp:case><hp:default><hh:margin><hc:intent value=\"0\" unit=\"HWPUNIT\"/><hc:left value=\"0\" unit=\"HWPUNIT\"/><hc:right value=\"0\" unit=\"HWPUNIT\"/><hc:prev value=\"0\" unit=\"HWPUNIT\"/><hc:next value=\"0\" unit=\"HWPUNIT\"/><\/hh:margin><hh:lineSpacing type=\"PERCENT\" value=\"150\" unit=\"HWPUNIT\"/><\/hp:default><\/hp:switch><hh:border borderFillIDRef=\"2\" offsetLeft=\"0\" offsetRight=\"0\" offsetTop=\"0\" offsetBottom=\"0\" connect=\"0\" ignoreMargin=\"0\"/><\/hh:paraPr><hh:paraPr id=\"10\" tabPrIDRef=\"0\" condense=\"0\" fontLineHeight=\"0\" snapToGrid=\"1\" suppressLineNumbers=\"0\" checked=\"0\" textDir=\"LTR\"><hh:align horizontal=\"JUSTIFY\" vertical=\"BASELINE\"/><hh:heading type=\"NONE\" idRef=\"0\" level=\"0\"/><hh:breakSetting breakLatinWord=\"KEEP_WORD\" breakNonLatinWord=\"KEEP_WORD\" widowOrphan=\"0\" keepWithNext=\"0\" keepLines=\"0\" pageBreakBefore=\"0\" lineWrap=\"BREAK\"/><hh:autoSpacing eAsianEng=\"0\" eAsianNum=\"0\"/><hp:switch><hp:case hp:required-namespace=\"http://www.hancom.co.kr/hwpml/2016/HwpUnitChar\"><hh:margin><hc:intent value=\"-1310\" unit=\"HWPUNIT\"/><hc:left value=\"0\" unit=\"HWPUNIT\"/><hc:right value=\"0\" unit=\"HWPUNIT\"/><hc:prev value=\"0\" unit=\"HWPUNIT\"/><hc:next value=\"0\" unit=\"HWPUNIT\"/><\/hh:margin><hh:lineSpacing type=\"PERCENT\" value=\"130\" unit=\"HWPUNIT\"/><\/hp:case><hp:default><hh:margin><hc:intent value=\"-2620\" unit=\"HWPUNIT\"/><hc:left value=\"0\" unit=\"HWPUNIT\"/><hc:right value=\"0\" unit=\"HWPUNIT\"/><hc:prev value=\"0\" unit=\"HWPUNIT\"/><hc:next value=\"0\" unit=\"HWPUNIT\"/><\/hh:margin><hh:lineSpacing type=\"PERCENT\" value=\"130\" unit=\"HWPUNIT\"/><\/hp:default><\/hp:switch><hh:border borderFillIDRef=\"2\" offsetLeft=\"0\" offsetRight=\"0\" offsetTop=\"0\" offsetBottom=\"0\" connect=\"0\" ignoreMargin=\"0\"/><\/hh:paraPr><hh:paraPr id=\"11\" tabPrIDRef=\"0\" condense=\"0\" fontLineHeight=\"0\" snapToGrid=\"1\" suppressLineNumbers=\"0\" checked=\"0\" textDir=\"LTR\"><hh:align horizontal=\"LEFT\" vertical=\"BASELINE\"/><hh:heading type=\"NONE\" idRef=\"0\" level=\"0\"/><hh:breakSetting breakLatinWord=\"KEEP_WORD\" breakNonLatinWord=\"BREAK_WORD\" widowOrphan=\"0\" keepWithNext=\"0\" keepLines=\"0\" pageBreakBefore=\"0\" lineWrap=\"BREAK\"/><hh:autoSpacing eAsianEng=\"0\" eAsianNum=\"0\"/><hp:switch><hp:case hp:required-namespace=\"http://www.hancom.co.kr/hwpml/2016/HwpUnitChar\"><hh:margin><hc:intent value=\"0\" unit=\"HWPUNIT\"/><hc:left value=\"0\" unit=\"HWPUNIT\"/><hc:right value=\"0\" unit=\"HWPUNIT\"/><hc:prev value=\"0\" unit=\"HWPUNIT\"/><hc:next value=\"0\" unit=\"HWPUNIT\"/><\/hh:margin><hh:lineSpacing type=\"PERCENT\" value=\"130\" unit=\"HWPUNIT\"/><\/hp:case><hp:default><hh:margin><hc:intent value=\"0\" unit=\"HWPUNIT\"/><hc:left value=\"0\" unit=\"HWPUNIT\"/><hc:right value=\"0\" unit=\"HWPUNIT\"/><hc:prev value=\"0\" unit=\"HWPUNIT\"/><hc:next value=\"0\" unit=\"HWPUNIT\"/><\/hh:margin><hh:lineSpacing type=\"PERCENT\" value=\"130\" unit=\"HWPUNIT\"/><\/hp:default><\/hp:switch><hh:border borderFillIDRef=\"2\" offsetLeft=\"0\" offsetRight=\"0\" offsetTop=\"0\" offsetBottom=\"0\" connect=\"0\" ignoreMargin=\"0\"/><\/hh:paraPr><hh:paraPr id=\"12\" tabPrIDRef=\"1\" condense=\"20\" fontLineHeight=\"0\" snapToGrid=\"1\" suppressLineNumbers=\"0\" checked=\"0\" textDir=\"LTR\"><hh:align horizontal=\"LEFT\" vertical=\"BASELINE\"/><hh:heading type=\"NONE\" idRef=\"0\" level=\"0\"/><hh:breakSetting breakLatinWord=\"KEEP_WORD\" breakNonLatinWord=\"BREAK_WORD\" widowOrphan=\"0\" keepWithNext=\"0\" keepLines=\"0\" pageBreakBefore=\"0\" lineWrap=\"BREAK\"/><hh:autoSpacing eAsianEng=\"0\" eAsianNum=\"0\"/><hp:switch><hp:case hp:required-namespace=\"http://www.hancom.co.kr/hwpml/2016/HwpUnitChar\"><hh:margin><hc:intent value=\"0\" unit=\"HWPUNIT\"/><hc:left value=\"0\" unit=\"HWPUNIT\"/><hc:right value=\"0\" unit=\"HWPUNIT\"/><hc:prev value=\"1200\" unit=\"HWPUNIT\"/><hc:next value=\"300\" unit=\"HWPUNIT\"/><\/hh:margin><hh:lineSpacing type=\"PERCENT\" value=\"160\" unit=\"HWPUNIT\"/><\/hp:case><hp:default><hh:margin><hc:intent value=\"0\" unit=\"HWPUNIT\"/><hc:left value=\"0\" unit=\"HWPUNIT\"/><hc:right value=\"0\" unit=\"HWPUNIT\"/><hc:prev value=\"2400\" unit=\"HWPUNIT\"/><hc:next value=\"600\" unit=\"HWPUNIT\"/><\/hh:margin><hh:lineSpacing type=\"PERCENT\" value=\"160\" unit=\"HWPUNIT\"/><\/hp:default><\/hp:switch><hh:border borderFillIDRef=\"2\" offsetLeft=\"0\" offsetRight=\"0\" offsetTop=\"0\" offsetBottom=\"0\" connect=\"0\" ignoreMargin=\"0\"/><\/hh:paraPr><hh:paraPr id=\"13\" tabPrIDRef=\"2\" condense=\"0\" fontLineHeight=\"0\" snapToGrid=\"1\" suppressLineNumbers=\"0\" checked=\"0\" textDir=\"LTR\"><hh:align horizontal=\"LEFT\" vertical=\"BASELINE\"/><hh:heading type=\"NONE\" idRef=\"0\" level=\"0\"/><hh:breakSetting breakLatinWord=\"KEEP_WORD\" breakNonLatinWord=\"BREAK_WORD\" widowOrphan=\"0\" keepWithNext=\"0\" keepLines=\"0\" pageBreakBefore=\"0\" lineWrap=\"BREAK\"/><hh:autoSpacing eAsianEng=\"0\" eAsianNum=\"0\"/><hp:switch><hp:case hp:required-namespace=\"http://www.hancom.co.kr/hwpml/2016/HwpUnitChar\"><hh:margin><hc:intent value=\"0\" unit=\"HWPUNIT\"/><hc:left value=\"0\" unit=\"HWPUNIT\"/><hc:right value=\"0\" unit=\"HWPUNIT\"/><hc:prev value=\"0\" unit=\"HWPUNIT\"/><hc:next value=\"700\" unit=\"HWPUNIT\"/><\/hh:margin><hh:lineSpacing type=\"PERCENT\" value=\"160\" unit=\"HWPUNIT\"/><\/hp:case><hp:default><hh:margin><hc:intent value=\"0\" unit=\"HWPUNIT\"/><hc:left value=\"0\" unit=\"HWPUNIT\"/><hc:right value=\"0\" unit=\"HWPUNIT\"/><hc:prev value=\"0\" unit=\"HWPUNIT\"/><hc:next value=\"1400\" unit=\"HWPUNIT\"/><\/hh:margin><hh:lineSpacing type=\"PERCENT\" value=\"160\" unit=\"HWPUNIT\"/><\/hp:default><\/hp:switch><hh:border borderFillIDRef=\"2\" offsetLeft=\"0\" offsetRight=\"0\" offsetTop=\"0\" offsetBottom=\"0\" connect=\"0\" ignoreMargin=\"0\"/><\/hh:paraPr><hh:paraPr id=\"14\" tabPrIDRef=\"2\" condense=\"0\" fontLineHeight=\"0\" snapToGrid=\"1\" suppressLineNumbers=\"0\" checked=\"0\" textDir=\"LTR\"><hh:align horizontal=\"LEFT\" vertical=\"BASELINE\"/><hh:heading type=\"NONE\" idRef=\"0\" level=\"0\"/><hh:breakSetting breakLatinWord=\"KEEP_WORD\" breakNonLatinWord=\"BREAK_WORD\" widowOrphan=\"0\" keepWithNext=\"0\" keepLines=\"0\" pageBreakBefore=\"0\" lineWrap=\"BREAK\"/><hh:autoSpacing eAsianEng=\"0\" eAsianNum=\"0\"/><hp:switch><hp:case hp:required-namespace=\"http://www.hancom.co.kr/hwpml/2016/HwpUnitChar\"><hh:margin><hc:intent value=\"0\" unit=\"HWPUNIT\"/><hc:left value=\"1100\" unit=\"HWPUNIT\"/><hc:right value=\"0\" unit=\"HWPUNIT\"/><hc:prev value=\"0\" unit=\"HWPUNIT\"/><hc:next value=\"700\" unit=\"HWPUNIT\"/><\/hh:margin><hh:lineSpacing type=\"PERCENT\" value=\"160\" unit=\"HWPUNIT\"/><\/hp:case><hp:default><hh:margin><hc:intent value=\"0\" unit=\"HWPUNIT\"/><hc:left value=\"2200\" unit=\"HWPUNIT\"/><hc:right value=\"0\" unit=\"HWPUNIT\"/><hc:prev value=\"0\" unit=\"HWPUNIT\"/><hc:next value=\"1400\" unit=\"HWPUNIT\"/><\/hh:margin><hh:lineSpacing type=\"PERCENT\" value=\"160\" unit=\"HWPUNIT\"/><\/hp:default><\/hp:switch><hh:border borderFillIDRef=\"2\" offsetLeft=\"0\" offsetRight=\"0\" offsetTop=\"0\" offsetBottom=\"0\" connect=\"0\" ignoreMargin=\"0\"/><\/hh:paraPr><hh:paraPr id=\"15\" tabPrIDRef=\"2\" condense=\"0\" fontLineHeight=\"0\" snapToGrid=\"1\" suppressLineNumbers=\"0\" checked=\"0\" textDir=\"LTR\"><hh:align horizontal=\"LEFT\" vertical=\"BASELINE\"/><hh:heading type=\"NONE\" idRef=\"0\" level=\"0\"/><hh:breakSetting breakLatinWord=\"KEEP_WORD\" breakNonLatinWord=\"BREAK_WORD\" widowOrphan=\"0\" keepWithNext=\"0\" keepLines=\"0\" pageBreakBefore=\"0\" lineWrap=\"BREAK\"/><hh:autoSpacing eAsianEng=\"0\" eAsianNum=\"0\"/><hp:switch><hp:case hp:required-namespace=\"http://www.hancom.co.kr/hwpml/2016/HwpUnitChar\"><hh:margin><hc:intent value=\"0\" unit=\"HWPUNIT\"/><hc:left value=\"2200\" unit=\"HWPUNIT\"/><hc:right value=\"0\" unit=\"HWPUNIT\"/><hc:prev value=\"0\" unit=\"HWPUNIT\"/><hc:next value=\"700\" unit=\"HWPUNIT\"/><\/hh:margin><hh:lineSpacing type=\"PERCENT\" value=\"160\" unit=\"HWPUNIT\"/><\/hp:case><hp:default><hh:margin><hc:intent value=\"0\" unit=\"HWPUNIT\"/><hc:left value=\"4400\" unit=\"HWPUNIT\"/><hc:right value=\"0\" unit=\"HWPUNIT\"/><hc:prev value=\"0\" unit=\"HWPUNIT\"/><hc:next value=\"1400\" unit=\"HWPUNIT\"/><\/hh:margin><hh:lineSpacing type=\"PERCENT\" value=\"160\" unit=\"HWPUNIT\"/><\/hp:default><\/hp:switch><hh:border borderFillIDRef=\"2\" offsetLeft=\"0\" offsetRight=\"0\" offsetTop=\"0\" offsetBottom=\"0\" connect=\"0\" ignoreMargin=\"0\"/><\/hh:paraPr><hh:paraPr id=\"16\" tabPrIDRef=\"1\" condense=\"0\" fontLineHeight=\"0\" snapToGrid=\"1\" suppressLineNumbers=\"0\" checked=\"0\" textDir=\"LTR\"><hh:align horizontal=\"JUSTIFY\" vertical=\"BASELINE\"/><hp:switch><hp:case hp:required-namespace=\"http://www.hancom.co.kr/hwpml/2016/paragraph\"><hh:heading type=\"OUTLINE\" idRef=\"0\" level=\"8\"/><\/hp:case><hp:default><hh:heading type=\"NONE\" idRef=\"0\" level=\"0\"/><\/hp:default><\/hp:switch><hh:breakSetting breakLatinWord=\"KEEP_WORD\" breakNonLatinWord=\"KEEP_WORD\" widowOrphan=\"0\" keepWithNext=\"0\" keepLines=\"0\" pageBreakBefore=\"0\" lineWrap=\"BREAK\"/><hh:autoSpacing eAsianEng=\"0\" eAsianNum=\"0\"/><hp:switch><hp:case hp:required-namespace=\"http://www.hancom.co.kr/hwpml/2016/HwpUnitChar\"><hh:margin><hc:intent value=\"0\" unit=\"HWPUNIT\"/><hc:left value=\"9000\" unit=\"HWPUNIT\"/><hc:right value=\"0\" unit=\"HWPUNIT\"/><hc:prev value=\"0\" unit=\"HWPUNIT\"/><hc:next value=\"0\" unit=\"HWPUNIT\"/><\/hh:margin><hh:lineSpacing type=\"PERCENT\" value=\"160\" unit=\"HWPUNIT\"/><\/hp:case><hp:default><hh:margin><hc:intent value=\"0\" unit=\"HWPUNIT\"/><hc:left value=\"18000\" unit=\"HWPUNIT\"/><hc:right value=\"0\" unit=\"HWPUNIT\"/><hc:prev value=\"0\" unit=\"HWPUNIT\"/><hc:next value=\"0\" unit=\"HWPUNIT\"/><\/hh:margin><hh:lineSpacing type=\"PERCENT\" value=\"160\" unit=\"HWPUNIT\"/><\/hp:default><\/hp:switch><hh:border borderFillIDRef=\"2\" offsetLeft=\"0\" offsetRight=\"0\" offsetTop=\"0\" offsetBottom=\"0\" connect=\"0\" ignoreMargin=\"0\"/><\/hh:paraPr><hh:paraPr id=\"17\" tabPrIDRef=\"1\" condense=\"0\" fontLineHeight=\"0\" snapToGrid=\"1\" suppressLineNumbers=\"0\" checked=\"0\" textDir=\"LTR\"><hh:align horizontal=\"JUSTIFY\" vertical=\"BASELINE\"/><hp:switch><hp:case hp:required-namespace=\"http://www.hancom.co.kr/hwpml/2016/paragraph\"><hh:heading type=\"OUTLINE\" idRef=\"0\" level=\"9\"/><\/hp:case><hp:default><hh:heading type=\"NONE\" idRef=\"0\" level=\"0\"/><\/hp:default><\/hp:switch><hh:breakSetting breakLatinWord=\"KEEP_WORD\" breakNonLatinWord=\"KEEP_WORD\" widowOrphan=\"0\" keepWithNext=\"0\" keepLines=\"0\" pageBreakBefore=\"0\" lineWrap=\"BREAK\"/><hh:autoSpacing eAsianEng=\"0\" eAsianNum=\"0\"/><hp:switch><hp:case hp:required-namespace=\"http://www.hancom.co.kr/hwpml/2016/HwpUnitChar\"><hh:margin><hc:intent value=\"0\" unit=\"HWPUNIT\"/><hc:left value=\"10000\" unit=\"HWPUNIT\"/><hc:right value=\"0\" unit=\"HWPUNIT\"/><hc:prev value=\"0\" unit=\"HWPUNIT\"/><hc:next value=\"0\" unit=\"HWPUNIT\"/><\/hh:margin><hh:lineSpacing type=\"PERCENT\" value=\"160\" unit=\"HWPUNIT\"/><\/hp:case><hp:default><hh:margin><hc:intent value=\"0\" unit=\"HWPUNIT\"/><hc:left value=\"20000\" unit=\"HWPUNIT\"/><hc:right value=\"0\" unit=\"HWPUNIT\"/><hc:prev value=\"0\" unit=\"HWPUNIT\"/><hc:next value=\"0\" unit=\"HWPUNIT\"/><\/hh:margin><hh:lineSpacing type=\"PERCENT\" value=\"160\" unit=\"HWPUNIT\"/><\/hp:default><\/hp:switch><hh:border borderFillIDRef=\"2\" offsetLeft=\"0\" offsetRight=\"0\" offsetTop=\"0\" offsetBottom=\"0\" connect=\"0\" ignoreMargin=\"0\"/><\/hh:paraPr><hh:paraPr id=\"18\" tabPrIDRef=\"1\" condense=\"0\" fontLineHeight=\"0\" snapToGrid=\"1\" suppressLineNumbers=\"0\" checked=\"0\" textDir=\"LTR\"><hh:align horizontal=\"JUSTIFY\" vertical=\"BASELINE\"/><hp:switch><hp:case hp:required-namespace=\"http://www.hancom.co.kr/hwpml/2016/paragraph\"><hh:heading type=\"OUTLINE\" idRef=\"0\" level=\"7\"/><\/hp:case><hp:default><hh:heading type=\"NONE\" idRef=\"0\" level=\"0\"/><\/hp:default><\/hp:switch><hh:breakSetting breakLatinWord=\"KEEP_WORD\" breakNonLatinWord=\"KEEP_WORD\" widowOrphan=\"0\" keepWithNext=\"0\" keepLines=\"0\" pageBreakBefore=\"0\" lineWrap=\"BREAK\"/><hh:autoSpacing eAsianEng=\"0\" eAsianNum=\"0\"/><hp:switch><hp:case hp:required-namespace=\"http://www.hancom.co.kr/hwpml/2016/HwpUnitChar\"><hh:margin><hc:intent value=\"0\" unit=\"HWPUNIT\"/><hc:left value=\"8000\" unit=\"HWPUNIT\"/><hc:right value=\"0\" unit=\"HWPUNIT\"/><hc:prev value=\"0\" unit=\"HWPUNIT\"/><hc:next value=\"0\" unit=\"HWPUNIT\"/><\/hh:margin><hh:lineSpacing type=\"PERCENT\" value=\"160\" unit=\"HWPUNIT\"/><\/hp:case><hp:default><hh:margin><hc:intent value=\"0\" unit=\"HWPUNIT\"/><hc:left value=\"16000\" unit=\"HWPUNIT\"/><hc:right value=\"0\" unit=\"HWPUNIT\"/><hc:prev value=\"0\" unit=\"HWPUNIT\"/><hc:next value=\"0\" unit=\"HWPUNIT\"/><\/hh:margin><hh:lineSpacing type=\"PERCENT\" value=\"160\" unit=\"HWPUNIT\"/><\/hp:default><\/hp:switch><hh:border borderFillIDRef=\"2\" offsetLeft=\"0\" offsetRight=\"0\" offsetTop=\"0\" offsetBottom=\"0\" connect=\"0\" ignoreMargin=\"0\"/><\/hh:paraPr><hh:paraPr id=\"19\" tabPrIDRef=\"0\" condense=\"0\" fontLineHeight=\"0\" snapToGrid=\"1\" suppressLineNumbers=\"0\" checked=\"0\" textDir=\"LTR\"><hh:align horizontal=\"JUSTIFY\" vertical=\"BASELINE\"/><hh:heading type=\"NONE\" idRef=\"0\" level=\"0\"/><hh:breakSetting breakLatinWord=\"KEEP_WORD\" breakNonLatinWord=\"KEEP_WORD\" widowOrphan=\"0\" keepWithNext=\"0\" keepLines=\"0\" pageBreakBefore=\"0\" lineWrap=\"BREAK\"/><hh:autoSpacing eAsianEng=\"0\" eAsianNum=\"0\"/><hp:switch><hp:case hp:required-namespace=\"http://www.hancom.co.kr/hwpml/2016/HwpUnitChar\"><hh:margin><hc:intent value=\"0\" unit=\"HWPUNIT\"/><hc:left value=\"0\" unit=\"HWPUNIT\"/><hc:right value=\"0\" unit=\"HWPUNIT\"/><hc:prev value=\"0\" unit=\"HWPUNIT\"/><hc:next value=\"800\" unit=\"HWPUNIT\"/><\/hh:margin><hh:lineSpacing type=\"PERCENT\" value=\"150\" unit=\"HWPUNIT\"/><\/hp:case><hp:default><hh:margin><hc:intent value=\"0\" unit=\"HWPUNIT\"/><hc:left value=\"0\" unit=\"HWPUNIT\"/><hc:right value=\"0\" unit=\"HWPUNIT\"/><hc:prev value=\"0\" unit=\"HWPUNIT\"/><hc:next value=\"1600\" unit=\"HWPUNIT\"/><\/hh:margin><hh:lineSpacing type=\"PERCENT\" value=\"150\" unit=\"HWPUNIT\"/><\/hp:default><\/hp:switch><hh:border borderFillIDRef=\"2\" offsetLeft=\"0\" offsetRight=\"0\" offsetTop=\"0\" offsetBottom=\"0\" connect=\"0\" ignoreMargin=\"0\"/><\/hh:paraPr><\/hh:paraProperties><hh:styles itemCnt=\"23\"><hh:style id=\"0\" type=\"PARA\" name=\"바탕글\" engName=\"Normal\" paraPrIDRef=\"0\" charPrIDRef=\"0\" nextStyleIDRef=\"0\" langID=\"1042\" lockForm=\"0\"/><hh:style id=\"1\" type=\"PARA\" name=\"본문\" engName=\"Body\" paraPrIDRef=\"1\" charPrIDRef=\"0\" nextStyleIDRef=\"1\" langID=\"1042\" lockForm=\"0\"/><hh:style id=\"2\" type=\"PARA\" name=\"개요 1\" engName=\"Outline 1\" paraPrIDRef=\"2\" charPrIDRef=\"0\" nextStyleIDRef=\"2\" langID=\"1042\" lockForm=\"0\"/><hh:style id=\"3\" type=\"PARA\" name=\"개요 2\" engName=\"Outline 2\" paraPrIDRef=\"3\" charPrIDRef=\"0\" nextStyleIDRef=\"3\" langID=\"1042\" lockForm=\"0\"/><hh:style id=\"4\" type=\"PARA\" name=\"개요 3\" engName=\"Outline 3\" paraPrIDRef=\"4\" charPrIDRef=\"0\" nextStyleIDRef=\"4\" langID=\"1042\" lockForm=\"0\"/><hh:style id=\"5\" type=\"PARA\" name=\"개요 4\" engName=\"Outline 4\" paraPrIDRef=\"5\" charPrIDRef=\"0\" nextStyleIDRef=\"5\" langID=\"1042\" lockForm=\"0\"/><hh:style id=\"6\" type=\"PARA\" name=\"개요 5\" engName=\"Outline 5\" paraPrIDRef=\"6\" charPrIDRef=\"0\" nextStyleIDRef=\"6\" langID=\"1042\" lockForm=\"0\"/><hh:style id=\"7\" type=\"PARA\" name=\"개요 6\" engName=\"Outline 6\" paraPrIDRef=\"7\" charPrIDRef=\"0\" nextStyleIDRef=\"7\" langID=\"1042\" lockForm=\"0\"/><hh:style id=\"8\" type=\"PARA\" name=\"개요 7\" engName=\"Outline 7\" paraPrIDRef=\"8\" charPrIDRef=\"0\" nextStyleIDRef=\"8\" langID=\"1042\" lockForm=\"0\"/><hh:style id=\"9\" type=\"PARA\" name=\"개요 8\" engName=\"Outline 8\" paraPrIDRef=\"18\" charPrIDRef=\"0\" nextStyleIDRef=\"9\" langID=\"1042\" lockForm=\"0\"/><hh:style id=\"10\" type=\"PARA\" name=\"개요 9\" engName=\"Outline 9\" paraPrIDRef=\"16\" charPrIDRef=\"0\" nextStyleIDRef=\"10\" langID=\"1042\" lockForm=\"0\"/><hh:style id=\"11\" type=\"PARA\" name=\"개요 10\" engName=\"Outline 10\" paraPrIDRef=\"17\" charPrIDRef=\"0\" nextStyleIDRef=\"11\" langID=\"1042\" lockForm=\"0\"/><hh:style id=\"12\" type=\"CHAR\" name=\"쪽 번호\" engName=\"Page Number\" paraPrIDRef=\"0\" charPrIDRef=\"1\" nextStyleIDRef=\"0\" langID=\"1042\" lockForm=\"0\"/><hh:style id=\"13\" type=\"CHAR\" name=\"줄 번호\" engName=\"Line Number\" paraPrIDRef=\"0\" charPrIDRef=\"0\" nextStyleIDRef=\"0\" langID=\"1042\" lockForm=\"0\"/><hh:style id=\"14\" type=\"PARA\" name=\"머리말\" engName=\"Header\" paraPrIDRef=\"9\" charPrIDRef=\"2\" nextStyleIDRef=\"14\" langID=\"1042\" lockForm=\"0\"/><hh:style id=\"15\" type=\"PARA\" name=\"각주\" engName=\"Footnote\" paraPrIDRef=\"10\" charPrIDRef=\"3\" nextStyleIDRef=\"15\" langID=\"1042\" lockForm=\"0\"/><hh:style id=\"16\" type=\"PARA\" name=\"미주\" engName=\"Endnote\" paraPrIDRef=\"10\" charPrIDRef=\"3\" nextStyleIDRef=\"16\" langID=\"1042\" lockForm=\"0\"/><hh:style id=\"17\" type=\"PARA\" name=\"메모\" engName=\"Memo\" paraPrIDRef=\"11\" charPrIDRef=\"4\" nextStyleIDRef=\"17\" langID=\"1042\" lockForm=\"0\"/><hh:style id=\"18\" type=\"PARA\" name=\"차례 제목\" engName=\"TOC Heading\" paraPrIDRef=\"12\" charPrIDRef=\"5\" nextStyleIDRef=\"18\" langID=\"1042\" lockForm=\"0\"/><hh:style id=\"19\" type=\"PARA\" name=\"차례 1\" engName=\"TOC 1\" paraPrIDRef=\"13\" charPrIDRef=\"6\" nextStyleIDRef=\"19\" langID=\"1042\" lockForm=\"0\"/><hh:style id=\"20\" type=\"PARA\" name=\"차례 2\" engName=\"TOC 2\" paraPrIDRef=\"14\" charPrIDRef=\"6\" nextStyleIDRef=\"20\" langID=\"1042\" lockForm=\"0\"/><hh:style id=\"21\" type=\"PARA\" name=\"차례 3\" engName=\"TOC 3\" paraPrIDRef=\"15\" charPrIDRef=\"6\" nextStyleIDRef=\"21\" langID=\"1042\" lockForm=\"0\"/><hh:style id=\"22\" type=\"PARA\" name=\"캡션\" engName=\"Caption\" paraPrIDRef=\"19\" charPrIDRef=\"0\" nextStyleIDRef=\"22\" langID=\"1042\" lockForm=\"0\"/><\/hh:styles><\/hh:refList><hh:compatibleDocument targetProgram=\"HWP201X\"><hh:layoutCompatibility/><\/hh:compatibleDocument><hh:docOption><hh:linkinfo path=\"\" pageInherit=\"0\" footnoteInherit=\"0\"/><\/hh:docOption><hh:metaTag>{\"name\":\"\"}<\/hh:metaTag><hh:trackchageConfig flags=\"56\"/><\/hh:head>", "Preview/PrvText.txt": ""}, "head": "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\" ?><hs:sec xmlns:ha=\"http://www.hancom.co.kr/hwpml/2011/app\" xmlns:hp=\"http://www.hancom.co.kr/hwpml/2011/paragraph\" xmlns:hp10=\"http://www.hancom.co.kr/hwpml/2016/paragraph\" xmlns:hs=\"http://www.hancom.co.kr/hwpml/2011/section\" xmlns:hc=\"http://www.hancom.co.kr/hwpml/2011/core\" xmlns:hh=\"http://www.hancom.co.kr/hwpml/2011/head\" xmlns:hhs=\"http://www.hancom.co.kr/hwpml/2011/history\" xmlns:hm=\"http://www.hancom.co.kr/hwpml/2011/master-page\" xmlns:hpf=\"http://www.hancom.co.kr/schema/2011/hpf\" xmlns:dc=\"http://purl.org/dc/elements/1.1/\" xmlns:opf=\"http://www.idpf.org/2007/opf/\" xmlns:ooxmlchart=\"http://www.hancom.co.kr/hwpml/2016/ooxmlchart\" xmlns:hwpunitchar=\"http://www.hancom.co.kr/hwpml/2016/HwpUnitChar\" xmlns:epub=\"http://www.idpf.org/2007/ops\" xmlns:config=\"urn:oasis:names:tc:opendocument:xmlns:config:1.0\"><hp:p id=\"0\" paraPrIDRef=\"0\" styleIDRef=\"0\" pageBreak=\"0\" columnBreak=\"0\" merged=\"0\"><hp:run charPrIDRef=\"0\"><hp:secPr id=\"\" textDirection=\"HORIZONTAL\" spaceColumns=\"1134\" tabStop=\"8000\" tabStopVal=\"4000\" tabStopUnit=\"HWPUNIT\" outlineShapeIDRef=\"1\" memoShapeIDRef=\"0\" textVerticalWidthHead=\"0\" masterPageCnt=\"0\"><hp:grid lineGrid=\"0\" charGrid=\"0\" wonggojiFormat=\"0\"/><hp:startNum pageStartsOn=\"BOTH\" page=\"0\" pic=\"0\" tbl=\"0\" equation=\"0\"/><hp:visibility hideFirstHeader=\"0\" hideFirstFooter=\"0\" hideFirstMasterPage=\"0\" border=\"SHOW_ALL\" fill=\"SHOW_ALL\" hideFirstPageNum=\"0\" hideFirstEmptyLine=\"0\" showLineNumber=\"0\"/><hp:lineNumberShape restartType=\"0\" countBy=\"0\" distance=\"0\" startNumber=\"0\"/><hp:pagePr landscape=\"WIDELY\" width=\"29764\" height=\"41953\" gutterType=\"LEFT_ONLY\"><hp:margin header=\"1417\" footer=\"1417\" gutter=\"0\" left=\"2835\" right=\"2835\" top=\"3402\" bottom=\"3402\"/><\/hp:pagePr><hp:footNotePr><hp:autoNumFormat type=\"DIGIT\" userChar=\"\" prefixChar=\"\" suffixChar=\")\" supscript=\"0\"/><hp:noteLine length=\"-1\" type=\"SOLID\" width=\"0.12 mm\" color=\"#000000\"/><hp:noteSpacing betweenNotes=\"283\" belowLine=\"567\" aboveLine=\"850\"/><hp:numbering type=\"CONTINUOUS\" newNum=\"1\"/><hp:placement place=\"EACH_COLUMN\" beneathText=\"0\"/><\/hp:footNotePr><hp:endNotePr><hp:autoNumFormat type=\"DIGIT\" userChar=\"\" prefixChar=\"\" suffixChar=\")\" supscript=\"0\"/><hp:noteLine length=\"14692344\" type=\"SOLID\" width=\"0.12 mm\" color=\"#000000\"/><hp:noteSpacing betweenNotes=\"0\" belowLine=\"567\" aboveLine=\"850\"/><hp:numbering type=\"CONTINUOUS\" newNum=\"1\"/><hp:placement place=\"END_OF_DOCUMENT\" beneathText=\"0\"/><\/hp:endNotePr><hp:pageBorderFill type=\"BOTH\" borderFillIDRef=\"1\" textBorder=\"PAPER\" headerInside=\"0\" footerInside=\"0\" fillArea=\"PAPER\"><hp:offset left=\"1417\" right=\"1417\" top=\"1417\" bottom=\"1417\"/><\/hp:pageBorderFill><hp:pageBorderFill type=\"EVEN\" borderFillIDRef=\"1\" textBorder=\"PAPER\" headerInside=\"0\" footerInside=\"0\" fillArea=\"PAPER\"><hp:offset left=\"1417\" right=\"1417\" top=\"1417\" bottom=\"1417\"/><\/hp:pageBorderFill><hp:pageBorderFill type=\"ODD\" borderFillIDRef=\"1\" textBorder=\"PAPER\" headerInside=\"0\" footerInside=\"0\" fillArea=\"PAPER\"><hp:offset left=\"1417\" right=\"1417\" top=\"1417\" bottom=\"1417\"/><\/hp:pageBorderFill><\/hp:secPr><hp:ctrl><hp:colPr id=\"\" type=\"NEWSPAPER\" layout=\"LEFT\" colCount=\"1\" sameSz=\"1\" sameGap=\"0\"/><\/hp:ctrl><\/hp:run>", "tail": "<\/hs:sec>"};
+/* ================= 유틸 ================= */
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const uid = () => 'p' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+const pad = n => String(n).padStart(2, '0');
+const hm = d => pad(d.getHours()) + ':' + pad(d.getMinutes());
+function toast(t) { const e = $('#toast'); e.textContent = t; e.classList.add('on'); clearTimeout(toast.t); toast.t = setTimeout(() => e.classList.remove('on'), 2200); }
+
+/* ================= 데이터/저장 ================= */
+const KEY = 'webnovel_notes_v1';
+let DB = { projects: [], email: '', fs: 16, customKw: [], deleted: {}, gcid: '', gEmail: '', gLinked: false, gLast: 0, gFileId: '' };
+const KW = [['장르·시대',['#현대물','#시대물','#서양풍','#동양풍','#로판','#판타지','#학원물','#사극','#무협','#SF','#헌터물','#아포칼립스']],['캐릭터·관계',['#미남수','#미남공','#미인수','#미인공','#능력수','#능력공','#절륜수','#절륜공','#아방수','#아방공','#첫사랑','#매력녀','#능력녀','#미녀','#미남','#다정남','#집착남','#냉미남','#까칠수','#순정공','#후회공','#짝사랑','#소꿉친구','#삼각관계','#재회물']],['소재·설정',['#회귀','#빙의','#환생','#복수','#성장물','#계약연애','#계약결혼','#궁정물','#재벌','#연예계','#오메가버스','#먼치킨']],['분위기',['#달달물','#힐링물','#개그','#시리어스','#피폐물','#사이다','#로맨스','#느와르']]];
+let dirty = false, lastSaved = null, storageOK = true;
+function load() {
+  try { const r = localStorage.getItem(KEY); if (r) DB = Object.assign(DB, JSON.parse(r)); } catch (e) { storageOK = false; }
+}
+function save(manual) {
+  try { localStorage.setItem(KEY, JSON.stringify(DB)); storageOK = true; dirty = false; lastSaved = new Date(); if (manual) toast('저장했습니다'); }
+  catch (e) { storageOK = false; toast('내부저장소에 저장하지 못했습니다. 백업 파일을 받아두세요'); }
+  paintStatus();
+}
+function touch() { dirty = true; const p = curP(); if (p) p.updated = Date.now(); paintStatus(); }
+function paintStatus() {
+  const e = $('#st'); if (!e) return;
+  e.className = 'st' + (dirty ? ' dirty' : '');
+  e.innerHTML = (dirty ? '저장 대기' : '저장됨') + '<br>' + (lastSaved ? hm(lastSaved) : (storageOK ? '' : '저장소 불가'));
+}
+setInterval(() => { if (dirty) save(); if (DB.gLinked && G.tok && Date.now() < G.exp - 60000) syncNow(false); }, 5 * 60 * 1000);          // 5분마다 자동 저장
+document.addEventListener('visibilitychange', () => { if (document.hidden && dirty) save(); });
+window.addEventListener('pagehide', () => { if (dirty) save(); });
+
+const DEF_FIELDS = [['name','이름'],['age','나이'],['height','키(외모)'],['face','얼굴(외모)'],['pers','성격'],['past','과거사']].map(([id,label]) => ({id,label}));
+const newSub = () => ['가족','업무','친구'].map(n => ({ name: n, people: [] }));
+function newProject(title) {
+  return { id: uid(), title, created: Date.now(), updated: Date.now(),
+    syn: { logline: '', leadFields: DEF_FIELDS.map(f => ({...f})), lead: [{}, {}], support: [newSub(), newSub()], others: [],
+      era: '', place: '', fantasy: '', plot: { gi: '', seung: '', jeon: '', gyeol: '' }, treat: [''] },
+    body: { pro: '', eps: [{ t: '', x: '' }], epi: '', side: [] } };
+}
+
+/* ================= 글자수 ================= */
+const cnt = s => ({ w: [...String(s || '').replace(/[\r\n]/g, '')].length, n: [...String(s || '').replace(/\s/g, '')].length });
+function charsText(p) {
+  const s = p.syn, o = [];
+  s.lead.forEach(L => s.leadFields.forEach(f => L[f.id] && o.push(L[f.id])));
+  s.support.forEach(g => g.forEach(sg => sg.people.forEach(q => o.push(q.name || '', q.rel || '', q.memo || ''))));
+  s.others.forEach(q => o.push(q.name || '', q.rel || '', q.memo || ''));
+  return o.join('\n');
+}
+function rowsOf(p) {
+  const s = p.syn, b = p.body, r = [];
+  r.push({ g: 'syn', label: '로그라인', text: s.logline });
+  r.push({ g: 'syn', label: '등장인물', text: charsText(p) });
+  r.push({ g: 'syn', label: '배경', text: [s.era, s.place, s.fantasy].join('\n') });
+  r.push({ g: 'syn', label: '줄거리(기승전결)', text: [s.plot.gi, s.plot.seung, s.plot.jeon, s.plot.gyeol].join('\n') });
+  r.push({ g: 'syn', label: '트리트먼트', text: s.treat.join('\n') });
+  r.push({ g: 'body', label: '프롤로그', text: b.pro });
+  b.eps.forEach((e, i) => r.push({ g: 'body', label: (i + 1) + '화', text: e.x }));
+  r.push({ g: 'body', label: '에필로그', text: b.epi });
+  b.side.forEach((e, i) => r.push({ g: 'body', label: '외전' + (i + 1) + '화', text: e.x }));
+  return r;
+}
+function sumRows(rs) { return rs.reduce((a, r) => { const c = cnt(r.text); return { w: a.w + c.w, n: a.n + c.n }; }, { w: 0, n: 0 }); }
+const totals = p => { const rs = rowsOf(p); return { syn: sumRows(rs.filter(r => r.g === 'syn')), body: sumRows(rs.filter(r => r.g === 'body')), all: sumRows(rs) }; };
+
+/* ================= 상태/경로 ================= */
+let V = { s: 'home', pid: null, tab: 'syn', key: null, ctab: 'lead' };
+const curP = () => DB.projects.find(p => p.id === V.pid);
+function getP(o, path) { return path.split('.').reduce((a, k) => a == null ? a : a[k], o); }
+function setP(o, path, v) { const k = path.split('.'); const l = k.pop(); const t = k.reduce((a, x) => a[x], o); t[l] = v; }
+const keyText = (p, key) => {
+  const [k, i] = key.split(':'); const s = p.syn, b = p.body;
+  switch (k) {
+    case 'logline': return s.logline; case 'chars': return charsText(p);
+    case 'setting': return [s.era, s.place, s.fantasy].join('\n');
+    case 'plot': return [s.plot.gi, s.plot.seung, s.plot.jeon, s.plot.gyeol].join('\n');
+    case 'treat': return s.treat.join('\n'); case 'pro': return b.pro; case 'epi': return b.epi;
+    case 'ep': return b.eps[i].x; case 'side': return b.side[i].x;
+  } return '';
+};
+const keyName = (p, key) => {
+  const [k, i] = key.split(':');
+  return { logline: '로그라인', chars: '등장인물', setting: '배경', plot: '줄거리', treat: '트리트먼트', pro: '프롤로그', epi: '에필로그' }[k] || (k === 'ep' ? (+i + 1) + '화' : '외전' + (+i + 1) + '화');
+};
+
+/* ================= 모달 ================= */
+function modal(html) { const m = $('#modal'); m.onclick = null; m.innerHTML = '<div class="box">' + html + '</div>'; m.classList.add('on'); }
+function closeModal() { $('#modal').classList.remove('on'); $('#modal').innerHTML = ''; }
+$('#modal').addEventListener('click', e => { if (e.target.id === 'modal') closeModal(); });
+function ask(title, ph, val = '') {
+  return new Promise(res => {
+    modal(`<h3>${esc(title)}</h3><input type="text" id="askin" placeholder="${esc(ph)}" value="${esc(val)}"><div class="row sp" style="margin-top:12px"><button data-a="x">취소</button><button class="pri" data-a="ok">확인</button></div>`);
+    const i = $('#askin'); i.focus();
+    const done = v => { closeModal(); res(v); };
+    $('#modal').onclick = e => { const a = e.target.dataset.a; if (a === 'ok') done(i.value.trim()); else if (a === 'x' || e.target.id === 'modal') done(null); };
+    i.onkeydown = e => { if (e.key === 'Enter') done(i.value.trim()); };
+  });
+}
+function confirmBox(msg, okLabel = '삭제') {
+  return new Promise(res => {
+    modal(`<h3>확인</h3><p style="white-space:pre-wrap">${esc(msg)}</p><div class="row sp"><button data-a="x">취소</button><button class="pri" data-a="ok">${esc(okLabel)}</button></div>`);
+    $('#modal').onclick = e => { const a = e.target.dataset.a; if (a === 'ok') { closeModal(); res(true); } else if (a === 'x' || e.target.id === 'modal') { closeModal(); res(false); } };
+  });
+}
+
+/* ================= 화면 ================= */
+const hdr = (title, back) => `<header class="top">${back ? '<button class="ghost" data-act="back">‹</button>' : ''}<h1>${esc(title)}</h1><div class="st" id="st"></div><button class="sm" data-act="saveNow">저장</button><button class="sm" data-act="menu">⋯</button></header>`;
+function render() {
+  const a = $('#app'), p = curP();
+  if (V.s === 'home') {
+    a.innerHTML = hdr('웹소 집필 노트', false) + `<div class="wrap">` +
+      (DB.projects.length ? DB.projects.map(pr => { const t = totals(pr).all; return `<div class="card proj" data-act="open" data-id="${pr.id}"><div class="row sp"><b>${esc(pr.title)}</b><button class="sm ghost" data-act="renameP" data-id="${pr.id}">이름변경</button></div><div class="mut">총 ${t.w.toLocaleString()}자(공백포함) · ${t.n.toLocaleString()}자(공백제외)</div><div class="mut">수정 ${new Date(pr.updated).toLocaleDateString('ko-KR')}</div></div>`; }).join('') : '<div class="card mut">아직 프로젝트가 없습니다.</div>') +
+      `<button class="pri" style="width:100%;margin-top:6px" data-act="newP">+ 새 프로젝트</button></div>`;
+  } else if (V.s === 'project') {
+    const t = totals(p);
+    const sy = [['logline','로그라인'],['chars','등장인물'],['setting','배경'],['plot','줄거리(기승전결)'],['treat','트리트먼트']];
+    const li = (key, label) => `<div class="item" data-act="edit" data-key="${key}"><span>${esc(label)}</span><span class="mut">${cnt(keyText(p, key)).w.toLocaleString()}자 ›</span></div>`;
+    let list;
+    if (V.tab === 'syn') list = `<div class="list">${sy.map(([k, l]) => li(k, l)).join('')}</div>`;
+    else list = `<div class="list">${li('pro','프롤로그')}${p.body.eps.map((_, i) => li('ep:' + i, (i + 1) + '화')).join('')}${li('epi','에필로그')}${p.body.side.map((_, i) => li('side:' + i, '외전' + (i + 1) + '화')).join('')}</div>
+      <div class="row"><button style="flex:1" data-act="addEp">+ 화 추가</button><button style="flex:1" data-act="addSide">+ 외전 추가</button></div>`;
+    a.innerHTML = hdr(p.title, true) + `<div class="wrap"><div class="tabs"><button class="${V.tab==='syn'?'on':''}" data-act="tab" data-t="syn">시놉시스</button><button class="${V.tab==='body'?'on':''}" data-act="tab" data-t="body">본문</button></div>${list}
+      <div class="card mut" style="margin-top:10px">시놉시스 ${t.syn.w.toLocaleString()}자 · 본문 ${t.body.w.toLocaleString()}자 · 전체 ${t.all.w.toLocaleString()}자 <span>(공백포함)</span></div>
+      <div class="row" style="margin-top:8px"><button style="flex:1" data-act="counts">글자수 보기</button><button class="pri" style="flex:1" data-act="export">내보내기</button></div></div>`;
+  } else if (V.s === 'edit') {
+    a.innerHTML = hdr(keyName(p, V.key), true) + `<div class="wrap">${editor(p, V.key)}</div>` +
+      `<div class="bar"><div class="cnt" id="cc"></div><button class="sm" data-act="spell">맞춤법</button><button class="sm" data-act="fsm">가−</button><button class="sm" data-act="fsp">가+</button></div>`;
+    document.querySelectorAll('textarea').forEach(grow); updCount();
+  }
+  paintStatus();
+}
+const grow = t => { t.style.height = 'auto'; t.style.height = (t.scrollHeight + 2) + 'px'; };
+function updCount() { const p = curP(), e = $('#cc'); if (!e || !p) return; const c = cnt(keyText(p, V.key)); e.innerHTML = `공백포함 <b>${c.w.toLocaleString()}</b>자<br>공백제외 <b>${c.n.toLocaleString()}</b>자`; }
+const ta = (path, v, ph = '', cls = '') => `<textarea class="${cls}" data-p="${path}" placeholder="${esc(ph)}" rows="2">${esc(v)}</textarea>`;
+const fl = (label, path, v, ph) => `<label class="f">${esc(label)}</label>${ta(path, v, ph)}`;
+
+function editor(p, key) {
+  const [k, i] = key.split(':'), s = p.syn, b = p.body;
+  if (k === 'logline') return fl('한 문장으로 요약', 'syn.logline', s.logline, '누가, 무엇을 위해, 어떤 장애를 넘어…');
+  if (k === 'setting') return fl('시대', 'syn.era', s.era) + fl('장소', 'syn.place', s.place) + fl('판타지 설정', 'syn.fantasy', s.fantasy, '세계관, 능력 체계, 규칙 등');
+  if (k === 'plot') return fl('기(起)', 'syn.plot.gi', s.plot.gi) + fl('승(承)', 'syn.plot.seung', s.plot.seung) + fl('전(轉)', 'syn.plot.jeon', s.plot.jeon) + fl('결(結)', 'syn.plot.gyeol', s.plot.gyeol);
+  if (k === 'treat') return s.treat.map((t, n) => `<div class="row sp"><label class="f">S#${n + 1}</label>${s.treat.length > 1 ? `<button class="sm ghost danger" data-act="delScene" data-i="${n}">삭제</button>` : ''}</div>${ta('syn.treat.' + n, t, '장면 내용')}`).join('') + `<button style="width:100%;margin-top:12px" data-act="addScene">+ S#${s.treat.length + 1} 추가</button>`;
+  if (k === 'chars') return charsEditor(p);
+  const pg = (path, v, title) => `${title}${ta(path, v, '여기에 본문을 쓰세요', 'page')}`;
+  const sz = `<style>.page{font-size:${DB.fs}px}</style>`;
+  if (k === 'pro') return sz + ta('body.pro', b.pro, '프롤로그', 'page');
+  if (k === 'epi') return sz + ta('body.epi', b.epi, '에필로그', 'page');
+  const arr = k === 'ep' ? 'eps' : 'side', it = b[arr][i];
+  return sz + `<label class="f">소제목(선택)</label><input type="text" data-p="body.${arr}.${i}.t" value="${esc(it.t)}">` + `<div style="height:8px"></div>` + ta(`body.${arr}.${i}.x`, it.x, '여기에 본문을 쓰세요', 'page') +
+    `<button class="danger" style="width:100%;margin-top:16px" data-act="delBody" data-arr="${arr}" data-i="${i}">이 ${k === 'ep' ? '화' : '외전'} 삭제</button>`;
+}
+function kwBox(s) {
+  if (!s.kw) s.kw = [...new Set(s.lead.flatMap(L => L.kw || []))];
+  const sel = s.kw, chip = k => `<span class="chip ${sel.includes(k) ? 'on' : ''}" data-act="kwToggle" data-k="${esc(k)}">${esc(k)}</span>`;
+  const custom = [...new Set([...(DB.customKw || []), ...sel])].filter(k => !KW.some(g => g[1].includes(k)));
+  return `<div class="card"><b>키워드</b> <span class="mut">(작품 전체 · 눌러서 선택)</span>` + (sel.length ? `<div class="mut" style="margin:6px 0">선택: ${esc(sel.join(' '))}</div>` : '') +
+    KW.map(([g, ks]) => `<div class="mut" style="margin-top:6px">${g}</div>${ks.map(chip).join('')}`).join('') +
+    (custom.length ? `<div class="mut" style="margin-top:6px">내가 추가한 키워드</div>${custom.map(chip).join('')}` : '') +
+    `<div class="row" style="margin-top:8px"><input type="text" id="kwin" placeholder="직접 작성 (예: #선결혼후연애)"><button data-act="addKw">추가</button></div></div>`;
+}
+function charsEditor(p) {
+  const s = p.syn, t = V.ctab;
+  const tabs = `<div class="tabs">${[['lead','주연'],['sup','조연'],['oth','기타 관련인']].map(([a, l]) => `<button class="${t === a ? 'on' : ''}" data-act="ctab" data-t="${a}">${l}</button>`).join('')}</div>`;
+  if (t === 'lead') {
+    return tabs + kwBox(s) + s.lead.map((L, i) => `<details ${i < 2 || V.openLead === i ? 'open' : ''}><summary>주연 ${i + 1}${L.name ? ' · ' + esc(L.name) : ''}</summary><div class="in">${s.leadFields.map(f => `<label class="f">${esc(f.label)}</label>${ta(`syn.lead.${i}.${f.id}`, L[f.id] || '')}`).join('')}${i >= 2 ? `<button class="sm danger" style="margin-top:10px" data-act="delLead" data-i="${i}">주연 ${i + 1} 삭제</button>` : ''}</div></details>`).join('') +
+      `<div class="row" style="margin-top:8px"><button style="flex:1" data-act="addLead">+ 주연 추가</button><button style="flex:1" data-act="addField">+ 입력 항목 추가</button></div>` +
+      `<div class="mut" style="margin-top:8px">항목 이름을 눌러 지우려면: ${s.leadFields.map(f => `<button class="sm" data-act="delField" data-id="${f.id}">${esc(f.label)} ×</button>`).join(' ')}</div>`;
+  }
+  const pp = (path, q) => `<div class="person"><div class="row"><input type="text" data-p="${path}.name" placeholder="이름" value="${esc(q.name)}"><input type="text" data-p="${path}.rel" placeholder="관계" value="${esc(q.rel)}" style="width:42%"></div><div style="height:6px"></div>${ta(path + '.memo', q.memo || '', '메모(나이·성격·역할)')}</div>`;
+  if (t === 'sup') {
+    return tabs + s.lead.map((L, i) => `<div class="card"><b>주연 ${i + 1}${L.name ? ' · ' + esc(L.name) : ''} 관련 조연</b>${s.support[i].map((sg, j) => `<div class="sub"><div class="row sp"><b>${esc(sg.name)}</b><span><button class="sm" data-act="addPerson" data-i="${i}" data-j="${j}">+ 인물</button> <button class="sm ghost danger" data-act="delSub" data-i="${i}" data-j="${j}">그룹삭제</button></span></div>${sg.people.map((q, n) => pp(`syn.support.${i}.${j}.people.${n}`, q) + `<div style="text-align:right;margin-top:-4px"><button class="sm ghost danger" data-act="delPerson" data-i="${i}" data-j="${j}" data-n="${n}">인물 삭제</button></div>`).join('')}</div>`).join('')}<button class="sm" data-act="addSub" data-i="${i}">+ 하위 그룹(예: 학교, 적대)</button></div>`).join('');
+  }
+  return tabs + s.others.map((q, n) => pp('syn.others.' + n, q) + `<div style="text-align:right;margin-top:-4px"><button class="sm ghost danger" data-act="delOther" data-n="${n}">삭제</button></div>`).join('') + `<button style="width:100%" data-act="addOther">+ 기타 관련인 추가</button>`;
+}
+
+/* ================= 이벤트 ================= */
+document.addEventListener('input', e => {
+  const t = e.target, path = t.dataset && t.dataset.p; if (!path) return;
+  const p = curP(); setP(p, path, t.value); if (t.tagName === 'TEXTAREA') grow(t); touch(); updCount();
+});
+document.addEventListener('click', async e => {
+  const el = e.target.closest('[data-act]'); if (!el || $('#modal').classList.contains('on') && !el.closest('#modal')) return;
+  if (el.closest('#modal') && !el.dataset.act) return;
+  const a = el.dataset.act, d = el.dataset, p = curP(), s = p && p.syn;
+  e.stopPropagation();
+  const R = () => { touch(); render(); };
+  switch (a) {
+    case 'back': V.s = V.s === 'edit' ? 'project' : 'home'; render(); break;
+    case 'saveNow': save(true); break;
+    case 'menu': settings(); break;
+    case 'open': V = { s: 'project', pid: d.id, tab: 'syn', key: null, ctab: 'lead' }; render(); break;
+    case 'newP': { const n = await ask('새 프로젝트 제목', '작품 제목'); if (n) { const pr = newProject(n); DB.projects.unshift(pr); V = { s: 'project', pid: pr.id, tab: 'syn', key: null, ctab: 'lead' }; touch(); save(); render(); } break; }
+    case 'renameP': { const pr = DB.projects.find(x => x.id === d.id); const n = await ask('제목 변경', '제목', pr.title); if (n) { pr.title = n; touch(); render(); } else if (n === '' ) { } else { /* cancel */ } break; }
+    case 'tab': V.tab = d.t; render(); break;
+    case 'edit': V.s = 'edit'; V.key = d.key; render(); window.scrollTo(0, 0); break;
+    case 'ctab': V.ctab = d.t; render(); break;
+    case 'addEp': p.body.eps.push({ t: '', x: '' }); R(); break;
+    case 'addSide': p.body.side.push({ t: '', x: '' }); R(); break;
+    case 'delBody': if (await confirmBox('이 원고를 삭제할까요? 되돌릴 수 없습니다.')) { p.body[d.arr].splice(+d.i, 1); if (d.arr === 'eps' && !p.body.eps.length) p.body.eps.push({ t: '', x: '' }); V.s = 'project'; V.tab = 'body'; R(); } break;
+    case 'addScene': s.treat.push(''); R(); break;
+    case 'delScene': s.treat.splice(+d.i, 1); R(); break;
+    case 'addLead': s.lead.push({}); s.support.push(newSub()); R(); break;
+    case 'delLead': if (await confirmBox('주연 ' + (+d.i + 1) + '과 그 조연 목록을 삭제할까요?')) { s.lead.splice(+d.i, 1); s.support.splice(+d.i, 1); R(); } break;
+    case 'kwToggle': { kwBox(s); const x = s.kw.indexOf(d.k); x < 0 ? s.kw.push(d.k) : s.kw.splice(x, 1); R(); break; }
+    case 'addKw': { kwBox(s); let k = $('#kwin').value.trim().replace(/\s+/g, ''); if (!k) break; if (k[0] !== '#') k = '#' + k; if (!s.kw.includes(k)) s.kw.push(k); DB.customKw = DB.customKw || []; if (!KW.some(g => g[1].includes(k)) && !DB.customKw.includes(k)) DB.customKw.push(k); R(); break; }
+    case 'addField': { const n = await ask('새 입력 항목 이름', '예: 말버릇, 특기, 직업'); if (n) { s.leadFields.push({ id: 'f' + Date.now().toString(36), label: n }); R(); } break; }
+    case 'delField': if (await confirmBox('이 항목과 입력된 내용을 모든 주연에서 지울까요?')) { s.leadFields = s.leadFields.filter(f => f.id !== d.id); s.lead.forEach(L => delete L[d.id]); R(); } break;
+    case 'addSub': { const n = await ask('하위 그룹 이름', '예: 학교, 적대 세력'); if (n) { s.support[+d.i].push({ name: n, people: [] }); R(); } break; }
+    case 'delSub': if (await confirmBox('이 그룹과 인물을 삭제할까요?')) { s.support[+d.i].splice(+d.j, 1); R(); } break;
+    case 'addPerson': s.support[+d.i][+d.j].people.push({ name: '', rel: '', memo: '' }); R(); break;
+    case 'delPerson': s.support[+d.i][+d.j].people.splice(+d.n, 1); R(); break;
+    case 'addOther': s.others.push({ name: '', rel: '', memo: '' }); R(); break;
+    case 'delOther': s.others.splice(+d.n, 1); R(); break;
+    case 'fsm': DB.fs = Math.max(12, DB.fs - 1); touch(); render(); break;
+    case 'fsp': DB.fs = Math.min(26, DB.fs + 1); touch(); render(); break;
+    case 'counts': showCounts(); break;
+    case 'export': exportDlg(); break;
+    case 'spell': spellDlg(); break;
+    case 'close': closeModal(); break;
+    case 'doExport': doExport(); break;
+    case 'delProject': { const pr = DB.projects.find(x => x.id === d.id); if (await confirmBox('「' + pr.title + '」 프로젝트 전체를 삭제할까요?\n되돌릴 수 없습니다.')) { DB.projects = DB.projects.filter(x => x !== pr); DB.deleted = DB.deleted || {}; DB.deleted[pr.id] = Date.now(); V = { s: 'home' }; touch(); save(); render(); } break; }
+    case 'backup': backup(); break;
+    case 'restore': $('#rf').click(); break;
+    case 'gsync': syncNow(true); break;
+    case 'gout': if (await confirmBox('연결을 해제할까요? 이 기기의 글은 그대로 남습니다.', '해제')) { DB.gLinked = false; DB.gFileId = ''; DB.gEmail = ''; G.tok = null; save(); settings(); } break;
+    case 'saveEmail': DB.email = $('#em').value.trim(); touch(); save(); toast('이메일을 등록했습니다'); break;
+    case 'fix': applyFix(+d.n); break;
+    case 'naver': copyAndOpen('https://search.naver.com/search.naver?query=' + encodeURIComponent('맞춤법 검사기')); break;
+    case 'busan': copyAndOpen('https://nara-speller.co.kr/speller/'); break;
+  }
+}, true);
+
+/* ================= 글자수 표 ================= */
+function showCounts() {
+  const p = curP(), rs = rowsOf(p), t = totals(p);
+  const tr = r => { const c = cnt(r.text); return `<tr><td>${esc(r.label)}</td><td>${c.w.toLocaleString()}</td><td>${c.n.toLocaleString()}</td></tr>`; };
+  const tot = (l, c) => `<tr class="tot"><td>${l}</td><td>${c.w.toLocaleString()}</td><td>${c.n.toLocaleString()}</td></tr>`;
+  modal(`<h3>글자수</h3><table><tr><th></th><th>공백포함</th><th>공백제외</th></tr>
+    <tr class="grp"><td colspan="3">시놉시스</td></tr>${rs.filter(r => r.g === 'syn').map(tr).join('')}${tot('시놉시스 합계', t.syn)}
+    <tr class="grp"><td colspan="3">본문</td></tr>${rs.filter(r => r.g === 'body').map(tr).join('')}${tot('본문 합계', t.body)}
+    <tr class="grp"><td colspan="3"></td></tr>${tot('전체 합계', t.all)}</table>
+    <p class="mut">공백포함 = 띄어쓰기 포함, 줄바꿈 제외 / 공백제외 = 띄어쓰기·줄바꿈 모두 제외</p><button style="width:100%" data-act="close">닫기</button>`);
+}
+
+/* ================= 맞춤법(간이) ================= */
+const RULES = [
+  [/몇일/g, '며칠'], [/웬지/g, '왠지'], [/왠만/g, '웬만'], [/어떻해/g, '어떡해'], [/금새/g, '금세'], [/됬/g, '됐'],
+  [/되요/g, '돼요'], [/뵈요/g, '봬요'], [/읍니다/g, '습니다'], [/어의없/g, '어이없'], [/설레임/g, '설렘'], [/바램/g, '바람'],
+  [/일일히/g, '일일이'], [/깨끗히/g, '깨끗이'], [/열심이(?=\s*(하|해|했))/g, '열심히'], [/솔직이/g, '솔직히'],
+  [/(할|갈|줄|볼|올|살|알|걸|될)께(요)?/g, (m, a, b) => a + '게' + (b || '')], [/않되/g, '안 돼'], [/담궈/g, '담가'],
+  [/ {2,}/g, ' ', '연속 공백'], [/([!?]){4,}/g, '$1$1$1', '문장부호 과다'], [/(?<!\.)\.\.(?!\.)/g, '…', '말줄임표 확인']
+];
+let SP = [], LF = null;
+document.addEventListener('focusin', e => { if (e.target.matches && e.target.matches('textarea[data-p]')) LF = e.target; });
+function runSpell(text) {
+  const out = [];
+  RULES.forEach(([re, fix, note]) => { re.lastIndex = 0; let m; while ((m = re.exec(text))) { out.push({ i: m.index, len: m[0].length, w: m[0], fix: typeof fix === 'function' ? fix(...m) : m[0].replace(new RegExp(re.source), fix), note }); if (m[0].length === 0) re.lastIndex++; } });
+  out.sort((a, b) => a.i - b.i); return out;
+}
+function spellDlg() {
+  const t = (LF && document.body.contains(LF) ? LF : null) || document.querySelector('textarea.page') || document.querySelector('textarea[data-p]');
+  if (!t) { toast('검사할 본문이 없습니다'); return; }
+  SP = runSpell(t.value); SP.target = t.dataset.p;
+  const list = SP.length ? SP.map((r, n) => { const a = t.value.slice(Math.max(0, r.i - 10), r.i), b = t.value.slice(r.i + r.len, r.i + r.len + 10); return `<div class="sp-item"><div>${esc(a)}<mark>${esc(r.w)}</mark>${esc(b)}</div><div class="row sp"><span class="mut">→ ${esc(r.fix)} ${r.note ? '· ' + r.note : ''}</span><button class="sm" data-act="fix" data-n="${n}">고치기</button></div></div>`; }).join('') : '<p>자주 틀리는 표현은 발견되지 않았습니다.</p>';
+  modal(`<h3>맞춤법 (간이 검사)</h3><p class="mut">앱 안에서는 자주 틀리는 표현만 잡습니다. 문법·띄어쓰기 전체 검사는 아래 검사기를 쓰세요. 본문을 자동 복사해 열어줍니다(붙여넣기, 긴 글은 나눠서).</p>${list}<div class="row" style="margin-top:12px"><button style="flex:1" data-act="busan">부산대(나라) 검사기</button><button style="flex:1" data-act="naver">네이버 검사기</button></div><button style="width:100%;margin-top:8px" data-act="close">닫기</button>`);
+}
+function applyFix(n) {
+  const r = SP[n], t = document.querySelector(`[data-p="${SP.target}"]`); if (!r || !t) return;
+  if (t.value.substr(r.i, r.len) !== r.w) { toast('이미 바뀐 문장입니다'); return; }
+  t.value = t.value.slice(0, r.i) + r.fix + t.value.slice(r.i + r.len);
+  setP(curP(), SP.target, t.value); grow(t); touch(); updCount(); spellDlg();
+}
+function copyAndOpen(url) {
+  const t = document.querySelector(`[data-p="${SP.target}"]`);
+  try { navigator.clipboard.writeText(t ? t.value : ''); toast('본문을 복사했습니다. 검사창에 붙여넣으세요'); } catch (e) { }
+  window.open(url, '_blank', 'noopener');
+}
+
+/* ================= 설정/백업 ================= */
+function settings() {
+  const p = curP(), g = DB.gLinked;
+  modal(`<h3>설정 · 동기화</h3>
+    <p class="mut">저장: 이 기기 내부저장소에 5분마다 자동 저장. 구글 드라이브를 연결하면 같은 구글 계정의 다른 기기와 동기화됩니다.</p>
+    <b>구글 드라이브 연동</b>
+    ${g ? `<p>연결됨: <b>${esc(DB.gEmail || '구글 계정')}</b><br><span class="mut">마지막 동기화 ${DB.gLast ? new Date(DB.gLast).toLocaleString('ko-KR') : '없음'} · 드라이브의 "웹소노트_동기화.json" 파일</span></p>
+      <div class="row"><button class="pri" style="flex:1" data-act="gsync">지금 동기화</button><button style="flex:1" data-act="gout">연결 해제</button></div>`
+    : `<label class="f">구글 OAuth 클라이언트 ID (README 참고)</label><input type="text" id="gcid" placeholder="123456-abc.apps.googleusercontent.com" value="${esc(DB.gcid)}">
+      <button class="pri" style="width:100%;margin-top:8px" data-act="gsync">구글 계정 연결 · 동기화</button>`}
+    <p class="mut" id="gmsg"></p>
+    <div class="row" style="margin-top:8px"><button style="flex:1" data-act="backup">백업 파일 보내기</button><button style="flex:1" data-act="restore">백업 불러오기</button></div>
+    <input type="file" id="rf" accept=".json,application/json" hidden>
+    ${p ? `<button class="danger" style="width:100%;margin-top:14px" data-act="delProject" data-id="${p.id}">현재 프로젝트 삭제</button>` : ''}
+    <button style="width:100%;margin-top:8px" data-act="close">닫기</button>`);
+  $('#rf').onchange = async e => { const f = e.target.files[0]; if (!f) return; try { const j = JSON.parse(await f.text()); if (!Array.isArray(j.projects)) throw 0; if (await confirmBox('현재 데이터를 백업 파일로 바꿉니다. 계속할까요?', '불러오기')) { const keep = { gcid: DB.gcid, gEmail: DB.gEmail, gLinked: DB.gLinked, gFileId: DB.gFileId, gLast: DB.gLast }; DB = Object.assign({ email: '', fs: 16, customKw: [], deleted: {} }, j, keep); V = { s: 'home' }; touch(); save(); render(); toast('불러왔습니다'); } } catch (x) { toast('올바른 백업 파일이 아닙니다'); } };
+}
+/* ---------- 구글 드라이브 동기화 ---------- */
+const G = { tok: null, exp: 0 };
+const SCOPE = 'https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/userinfo.email';
+const SYNC_NAME = '웹소노트_동기화.json';
+function loadGIS() {
+  return new Promise((res, rej) => {
+    if (window.google && google.accounts && google.accounts.oauth2) return res();
+    const sc = document.createElement('script'); sc.src = 'https://accounts.google.com/gsi/client'; sc.onload = res;
+    sc.onerror = () => rej(new Error('구글 로그인 스크립트를 불러오지 못했습니다(인터넷 연결 확인)')); document.head.appendChild(sc);
+  });
+}
+async function gToken() {
+  if (G.tok && Date.now() < G.exp - 60000) return G.tok;
+  if (!DB.gcid) throw new Error('클라이언트 ID를 입력하세요');
+  await loadGIS();
+  return new Promise((res, rej) => {
+    const tc = google.accounts.oauth2.initTokenClient({ client_id: DB.gcid, scope: SCOPE,
+      callback: r => { if (r.error) return rej(new Error(r.error_description || r.error)); G.tok = r.access_token; G.exp = Date.now() + (r.expires_in || 3600) * 1000; res(G.tok); },
+      error_callback: e => rej(new Error('로그인이 취소되었거나 팝업이 막혔습니다 (' + (e.type || '') + ')')) });
+    tc.requestAccessToken({ prompt: DB.gLinked ? '' : 'consent' });
+  });
+}
+async function gapi(url, opt = {}) {
+  const r = await fetch(url, Object.assign({}, opt, { headers: Object.assign({ Authorization: 'Bearer ' + G.tok }, opt.headers || {}) }));
+  if (!r.ok) throw new Error('구글 응답 오류 ' + r.status);
+  return r;
+}
+/* 병합: 프로젝트별로 수정시각이 더 최근인 쪽을 채택, 삭제 기록 반영 */
+function mergeData(L, R) {
+  const del = Object.assign({}, R.deleted || {}); Object.entries(L.deleted || {}).forEach(([k, v]) => del[k] = Math.max(del[k] || 0, v));
+  const map = {};
+  [...(R.projects || []), ...(L.projects || [])].forEach(p => { if (!map[p.id] || (p.updated || 0) > (map[p.id].updated || 0)) map[p.id] = p; });
+  const projects = Object.values(map).filter(p => !(del[p.id] && del[p.id] >= (p.updated || 0))).sort((a, b) => (b.updated || 0) - (a.updated || 0));
+  return { projects, deleted: del, customKw: [...new Set([...(L.customKw || []), ...(R.customKw || [])])] };
+}
+let syncing = false;
+async function syncNow(interactive) {
+  if (syncing) return; syncing = true;
+  const msg = t => { const e = $('#gmsg'); if (e) e.textContent = t; };
+  try {
+    if (interactive) { const c = $('#gcid'); if (c) DB.gcid = c.value.trim(); msg('구글 로그인 중…'); }
+    await gToken();
+    if (interactive) msg('동기화 중…');
+    if (!DB.gEmail) { try { DB.gEmail = (await (await gapi('https://www.googleapis.com/oauth2/v3/userinfo')).json()).email || ''; } catch (e) { } }
+    let id = DB.gFileId, remote = null;
+    if (!id) { const q = encodeURIComponent("name='" + SYNC_NAME + "' and trashed=false"); const f = (await (await gapi('https://www.googleapis.com/drive/v3/files?q=' + q + '&fields=files(id)')).json()).files; if (f && f[0]) id = f[0].id; }
+    if (id) { try { remote = await (await gapi('https://www.googleapis.com/drive/v3/files/' + id + '?alt=media')).json(); } catch (e) { if (String(e.message).includes('404')) { id = ''; } else throw e; } }
+    const m = mergeData(DB, remote || {});
+    DB.projects = m.projects; DB.deleted = m.deleted; DB.customKw = m.customKw;
+    const body = JSON.stringify({ app: 'webnovel-notes', v: 1, savedAt: Date.now(), projects: m.projects, deleted: m.deleted, customKw: m.customKw });
+    if (id) await gapi('https://www.googleapis.com/upload/drive/v3/files/' + id + '?uploadType=media', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body });
+    else {
+      const bd = 'wn' + Date.now(), meta = JSON.stringify({ name: SYNC_NAME, mimeType: 'application/json' });
+      const r = await gapi('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id', { method: 'POST', headers: { 'Content-Type': 'multipart/related; boundary=' + bd }, body: `--${bd}\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n${meta}\r\n--${bd}\r\nContent-Type: application/json\r\n\r\n${body}\r\n--${bd}--` });
+      id = (await r.json()).id;
+    }
+    DB.gFileId = id; DB.gLinked = true; DB.gLast = Date.now();
+    if (V.pid && !curP()) V = { s: 'home' };
+    save(); if (interactive) { settings(); toast('동기화했습니다'); } render();
+  } catch (e) { msg('실패: ' + e.message); if (!interactive) toast('동기화 실패: ' + e.message); }
+  finally { syncing = false; }
+}
+async function backup() {
+  const name = '웹소노트_백업_' + new Date().toISOString().slice(0, 10) + '.json';
+  const file = new File([JSON.stringify(DB)], name, { type: 'application/json' });
+  try { if (navigator.canShare && navigator.canShare({ files: [file] })) { await navigator.share({ files: [file], title: name, text: DB.email ? '백업 → ' + DB.email : '' }); return; } } catch (e) { if (e && e.name === 'AbortError') return; }
+  download(file, name);
+}
+
+/* ================= 내보내기 ================= */
+function lines(t) { return String(t || '').replace(/\r/g, '').split('\n'); }
+function paras(p, scope) {
+  const o = [], s = p.syn, b = p.body, P = (k, t, pb) => o.push({ k, t, pb });
+  const kv = (label, v) => { const L = lines(v); if (!String(v || '').trim()) return; P('p', label + ': ' + L[0]); L.slice(1).forEach(x => P('p', x)); };
+  const blk = (h, v) => { P('h1', h); lines(v).forEach(x => P('p', x)); P('p', ''); };
+  if (scope !== 'body') {
+    P('title', p.title + ' 시놉시스'); P('p', '');
+    blk('로그라인', s.logline);
+    P('h1', '등장인물'); if (!s.kw) s.kw = [...new Set(s.lead.flatMap(L => L.kw || []))]; kv('키워드', s.kw.join(' ')); P('h2', '주연');
+    s.lead.forEach((L, i) => { P('h2', '주연 ' + (i + 1) + (L.name ? ' · ' + L.name : '')); s.leadFields.forEach(f => f.id !== 'name' && kv(f.label, L[f.id])); P('p', ''); });
+    s.support.forEach((g, i) => { const has = g.some(sg => sg.people.length); if (!has) return; P('h2', '조연 (주연 ' + (i + 1) + ' 관련)'); g.forEach(sg => { if (!sg.people.length) return; P('p', '[' + sg.name + ']'); sg.people.forEach(q => kv(q.name || '(이름 없음)', [q.rel, q.memo].filter(Boolean).join(' / '))); }); P('p', ''); });
+    if (s.others.length) { P('h2', '기타 관련인'); s.others.forEach(q => kv(q.name || '(이름 없음)', [q.rel, q.memo].filter(Boolean).join(' / '))); P('p', ''); }
+    P('h1', '배경'); kv('시대', s.era); kv('장소', s.place); kv('판타지 설정', s.fantasy); P('p', '');
+    P('h1', '줄거리'); [['기', s.plot.gi], ['승', s.plot.seung], ['전', s.plot.jeon], ['결', s.plot.gyeol]].forEach(([l, v]) => { P('h2', l); lines(v).forEach(x => P('p', x)); }); P('p', '');
+    P('h1', '트리트먼트'); s.treat.forEach((t, n) => { P('h2', 'S#' + (n + 1)); lines(t).forEach(x => P('p', x)); });
+  }
+  if (scope !== 'syn') {
+    const ch = (h, t, pb) => { P('h1', h, pb); lines(t).forEach(x => P('p', x)); };
+    const sub = (it, base) => base + (it.t ? ' ' + it.t : '');
+    if (scope === 'body') P('title', p.title);
+    ch('프롤로그', b.pro, scope === 'all');
+    b.eps.forEach((e, i) => ch(sub(e, (i + 1) + '화'), e.x, true));
+    ch('에필로그', b.epi, true);
+    b.side.forEach((e, i) => ch(sub(e, '외전' + (i + 1) + '화'), e.x, true));
+  }
+  return o;
+}
+function toTxt(ps) { return ps.map(x => x.k === 'h1' ? (x.pb ? '\n\n' : '') + '■ ' + x.t : x.k === 'h2' ? '▶ ' + x.t : x.t).join('\n'); }
+const xe = s => String(s).replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g, '').replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
+function toHwpx(ps, title) {
+  const cp = { title: 7, h1: 8, h2: 8, p: 0 };
+  let id = 1;
+  const run = x => x.t === '' ? `<hp:run charPrIDRef="${cp[x.k]}"><hp:t/></hp:run>` : `<hp:run charPrIDRef="${cp[x.k]}"><hp:t>${xe(x.t)}</hp:t></hp:run>`;
+  let body = HWPX.head + run(ps[0]) + '</hp:p>';
+  ps.slice(1).forEach(x => { body += `<hp:p id="${id++}" paraPrIDRef="0" styleIDRef="0" pageBreak="${x.pb ? 1 : 0}" columnBreak="0" merged="0">${run(x)}</hp:p>`; });
+  body += HWPX.tail;
+  const F = Object.assign({}, HWPX.files);
+  F['Contents/content.hpf'] = F['Contents/content.hpf'].replace('<opf:title/>', '<opf:title>' + xe(title) + '</opf:title>').replace(/synthetic-fixture-author/g, '작가');
+  F['Preview/PrvText.txt'] = ps.slice(0, 20).map(x => x.t).join('\n');
+  F['Contents/section0.xml'] = body;
+  const order = ['mimetype', 'version.xml', 'settings.xml', 'META-INF/container.xml', 'META-INF/container.rdf', 'META-INF/manifest.xml', 'Contents/content.hpf', 'Contents/header.xml', 'Contents/section0.xml', 'Preview/PrvText.txt'];
+  return zip(order.map(n => [n, new TextEncoder().encode(F[n])]));
+}
+/* 무압축 ZIP */
+const CRC = (() => { const t = new Uint32Array(256); for (let n = 0; n < 256; n++) { let c = n; for (let k = 0; k < 8; k++) c = c & 1 ? 0xEDB88320 ^ (c >>> 1) : c >>> 1; t[n] = c >>> 0; } return t; })();
+const crc32 = u => { let c = 0xFFFFFFFF; for (let i = 0; i < u.length; i++) c = CRC[(c ^ u[i]) & 255] ^ (c >>> 8); return (c ^ 0xFFFFFFFF) >>> 0; };
+function zip(entries) {
+  const enc = new TextEncoder(), parts = [], cen = []; let off = 0;
+  const u16 = n => [n & 255, (n >> 8) & 255], u32 = n => [n & 255, (n >> 8) & 255, (n >> 16) & 255, (n >>> 24) & 255];
+  entries.forEach(([name, data]) => {
+    const nb = enc.encode(name), crc = crc32(data), time = 0, date = (46 << 9) | (1 << 5) | 1;
+    const lh = new Uint8Array([0x50, 0x4b, 3, 4, ...u16(20), ...u16(0x0800), ...u16(0), ...u16(time), ...u16(date), ...u32(crc), ...u32(data.length), ...u32(data.length), ...u16(nb.length), ...u16(0), ...nb]);
+    parts.push(lh, data);
+    cen.push(new Uint8Array([0x50, 0x4b, 1, 2, ...u16(20), ...u16(20), ...u16(0x0800), ...u16(0), ...u16(time), ...u16(date), ...u32(crc), ...u32(data.length), ...u32(data.length), ...u16(nb.length), ...u16(0), ...u16(0), ...u16(0), ...u16(0), ...u32(0), ...u32(off), ...nb]));
+    off += lh.length + data.length;
+  });
+  const cs = cen.reduce((a, c) => a + c.length, 0);
+  const end = new Uint8Array([0x50, 0x4b, 5, 6, 0, 0, 0, 0, ...u16(entries.length), ...u16(entries.length), ...u32(cs), ...u32(off), 0, 0]);
+  return new Blob([...parts, ...cen, end], { type: 'application/hwp+zip' });
+}
+function download(blob, name) { const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name; document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1500); }
+function exportDlg() {
+  modal(`<h3>내보내기</h3><b>방식</b>
+    <label class="opt"><input type="radio" name="mode" value="sep" checked><span>별개로 내보내기<br><span class="mut">시놉시스 파일 + 본문 파일 (2개)</span></span></label>
+    <label class="opt"><input type="radio" name="mode" value="all"><span>취합해서 내보내기<br><span class="mut">시놉시스 + 본문을 한 파일로</span></span></label>
+    <b>형식</b>
+    <label class="opt"><input type="radio" name="fmt" value="hwpx" checked><span>HWPX (한글, A6 용지)</span></label>
+    <label class="opt"><input type="radio" name="fmt" value="txt"><span>TXT (UTF-8)</span></label>
+    <p class="mut">HWP(구형 바이너리)는 이 앱에서 직접 만들 수 없습니다. 한글에서 HWPX를 열고 "다른 이름으로 저장 → HWP"를 선택하세요.</p>
+    <div class="row sp"><button data-act="close">취소</button><button class="pri" data-act="doExport">내보내기</button></div>`);
+}
+function doExport() {
+  const p = curP(), mode = document.querySelector('[name=mode]:checked').value, fmt = document.querySelector('[name=fmt]:checked').value;
+  const jobs = mode === 'sep' ? [['syn', '시놉시스'], ['body', '본문']] : [['all', '전체']];
+  jobs.forEach(([sc, label], n) => setTimeout(() => {
+    const ps = paras(p, sc), fname = p.title.replace(/[\\/:*?"<>|]/g, '_') + '_' + label + '.' + fmt;
+    if (fmt === 'txt') download(new Blob(['﻿' + toTxt(ps)], { type: 'text/plain;charset=utf-8' }), fname);
+    else download(toHwpx(ps, p.title + ' ' + label), fname);
+  }, n * 600));
+  closeModal(); toast('내보내는 중…');
+}
+
+/* ================= 시작 ================= */
+load(); render();
+try { if (navigator.storage && navigator.storage.persist) navigator.storage.persist(); } catch (e) { }
+if ('serviceWorker' in navigator && /^https?:$/.test(location.protocol)) navigator.serviceWorker.register('sw.js').catch(() => { });
+window.__app = { mergeData, DB: () => DB, paras, toTxt, toHwpx, newProject, rowsOf, totals, runSpell, cnt };
+</script>
+</body>
+</html>
