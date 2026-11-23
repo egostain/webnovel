@@ -299,6 +299,7 @@ document.addEventListener('click', async e => {
     case 'restore': $('#rf').click(); break;
     case 'gsync': syncNow(true); break;
     case 'gout': if (await confirmBox('연결을 해제할까요? 이 기기의 글은 그대로 남습니다.', '해제')) { DB.gLinked = false; DB.gFileId = ''; DB.gEmail = ''; G.tok = null; save(); settings(); } break;
+    case 'addproj': $('#pf').click(); break;
     case 'saveEmail': DB.email = $('#em').value.trim(); touch(); save(); toast('이메일을 등록했습니다'); break;
     case 'fix': applyFix(+d.n); break;
     case 'naver': copyAndOpen('https://search.naver.com/search.naver?query=' + encodeURIComponent('맞춤법 검사기')); break;
@@ -364,10 +365,12 @@ function settings() {
       <button class="pri" style="width:100%;margin-top:8px" data-act="gsync">구글 계정 연결 · 동기화</button>`}
     <p class="mut" id="gmsg"></p>
     <div class="row" style="margin-top:8px"><button style="flex:1" data-act="backup">백업 파일 보내기</button><button style="flex:1" data-act="restore">백업 불러오기</button></div>
-    <input type="file" id="rf" accept=".json,application/json" hidden>
+    <div class="row" style="margin-top:8px"><button style="flex:1" data-act="addproj">프로젝트 파일 추가(가져오기)</button></div>
+    <input type="file" id="rf" accept=".json,application/json" hidden><input type="file" id="pf" accept=".json,application/json" hidden>
     ${p ? `<button class="danger" style="width:100%;margin-top:14px" data-act="delProject" data-id="${p.id}">현재 프로젝트 삭제</button>` : ''}
     <button style="width:100%;margin-top:8px" data-act="close">닫기</button>`);
   $('#rf').onchange = async e => { const f = e.target.files[0]; if (!f) return; try { const j = JSON.parse(await f.text()); if (!Array.isArray(j.projects)) throw 0; if (await confirmBox('현재 데이터를 백업 파일로 바꿉니다. 계속할까요?', '불러오기')) { const keep = { gcid: DB.gcid, gEmail: DB.gEmail, gLinked: DB.gLinked, gFileId: DB.gFileId, gLast: DB.gLast }; DB = Object.assign({ email: '', fs: 16, customKw: [], deleted: {} }, j, keep); V = { s: 'home' }; touch(); save(); render(); toast('불러왔습니다'); } } catch (x) { toast('올바른 백업 파일이 아닙니다'); } };
+  $('#pf').onchange = async e => { const f = e.target.files[0]; if (!f) return; try { const j = JSON.parse(await f.text()); if (!Array.isArray(j.projects)) throw 0; let n = 0; j.projects.forEach(p => { if (p && p.id && p.syn && p.body && !DB.projects.some(x => x.id === p.id)) { DB.projects.unshift(p); n++; } }); (j.customKw || []).forEach(k => { DB.customKw = DB.customKw || []; if (!DB.customKw.includes(k)) DB.customKw.push(k); }); touch(); save(); render(); closeModal(); toast(n ? n + '개 프로젝트를 추가했습니다 (기존 글은 그대로)' : '이미 들어 있는 프로젝트입니다'); } catch (x) { toast('올바른 프로젝트 파일이 아닙니다'); } };
 }
 /* ---------- 구글 드라이브 동기화 ---------- */
 const G = { tok: null, exp: 0 };
