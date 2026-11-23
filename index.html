@@ -522,7 +522,8 @@ function doExport() {
 }
 
 /* ================= 시작 ================= */
-load(); render();
+const DEFAULT_CID = '177902208370-9c9ce0nabc46nlrd842dkp3sclg64fif.apps.googleusercontent.com';
+load(); if (!DB.gcid) DB.gcid = DEFAULT_CID; render();
 try { if (navigator.storage && navigator.storage.persist) navigator.storage.persist(); } catch (e) { }
 if ('serviceWorker' in navigator && /^https?:$/.test(location.protocol)) navigator.serviceWorker.register('sw.js').catch(() => { });
 window.__app = { mergeData, DB: () => DB, paras, toTxt, toHwpx, newProject, rowsOf, totals, runSpell, cnt };
