@@ -162,6 +162,16 @@ const keyName = (p, key) => {
 /* ================= 모달 ================= */
 function modal(html) { const m = $('#modal'); m.onclick = null; m.innerHTML = '<div class="box">' + html + '</div>'; m.classList.add('on'); }
 function closeModal() { $('#modal').classList.remove('on'); $('#modal').innerHTML = ''; }
+/* --- 기기 '뒤로가기'(히스토리) 처리: 화면은 한 단계씩, 팝업은 닫기만, 홈에서 누르면 종료 --- */
+let popping = false, navSig = '';
+const hd = () => (history.state && history.state.d) || 0;
+function hist(st) { try { history.pushState(st, ''); } catch (e) { } }
+window.addEventListener('popstate', e => {
+  const st = e.state;
+  if ($('#modal').classList.contains('on')) { closeModal(); hist({ V: Object.assign({}, V), d: ((st && st.d) || 0) + 1 }); return; }
+  if (st && st.guard) { history.back(); return; }
+  if (st && st.V) { popping = true; const t = V.tab, c = V.ctab; V = Object.assign({}, st.V, { tab: t || st.V.tab, ctab: c || st.V.ctab }); render(); popping = false; }
+});
 $('#modal').addEventListener('click', e => { if (e.target.id === 'modal') closeModal(); });
 function ask(title, ph, val = '') {
   return new Promise(res => {
@@ -182,6 +192,12 @@ function confirmBox(msg, okLabel = '삭제') {
 /* ================= 화면 ================= */
 const hdr = (title, back) => `<header class="top">${back ? '<button class="ghost" data-act="back">‹</button>' : ''}<h1>${esc(title)}</h1><div class="st" id="st"></div><button class="sm" data-act="saveNow">저장</button><button class="sm" data-act="menu">⋯</button></header>`;
 function render() {
+  if (V.pid && !curP()) V = { s: 'home' };
+  if (V.s === 'edit') { try { keyText(curP(), V.key); } catch (e) { V.s = 'project'; } }
+  { const sig = V.s + '|' + V.pid + '|' + V.key;
+    if (navSig === '') { try { history.replaceState({ V: { s: 'home' }, d: 0, guard: 1 }, ''); history.pushState({ V: Object.assign({}, V), d: 1 }, ''); } catch (e) { } }
+    else if (sig !== navSig && !popping) hist({ V: Object.assign({}, V), d: hd() + 1 });
+    navSig = sig; }
   const a = $('#app'), p = curP();
   if (V.s === 'home') {
     a.innerHTML = hdr('웹소 집필 노트', false) + `<div class="wrap">` +
@@ -262,7 +278,7 @@ document.addEventListener('click', async e => {
   e.stopPropagation();
   const R = () => { touch(); render(); };
   switch (a) {
-    case 'back': V.s = V.s === 'edit' ? 'project' : 'home'; render(); break;
+    case 'back': if (hd() > 1) history.back(); else { V.s = V.s === 'edit' ? 'project' : 'home'; render(); } break;
     case 'saveNow': save(true); break;
     case 'menu': settings(); break;
     case 'open': V = { s: 'project', pid: d.id, tab: 'syn', key: null, ctab: 'lead' }; render(); break;
